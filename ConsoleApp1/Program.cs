@@ -11,7 +11,10 @@ public class Data
     public string Path { get; set; }
     public char Delimiter { get; set; } = ',';
     public ACIDbDeserializer aCIDb { get; set; } = null;
-    public IReadOnlyDictionary<int, int> semiSupervised { get; set; } = null;
+    public IReadOnlyDictionary<int, int> semiSupervised5 { get; set; } = null;
+    public IReadOnlyDictionary<int, int> semiSupervised10 { get; set; } = null;
+    public IReadOnlyDictionary<int, int> semiSupervised15 { get; set; } = null;
+    public IReadOnlyDictionary<int, int> semiSupervised20 { get; set; } = null;
 }
 public class Program
 {
@@ -90,7 +93,7 @@ public class Program
         }
         pt.PrintLine();
     }
-    public static void FC_SSMC_FCM_Benchmark()
+    public static void MC_SSMC_FCM_Benchmark()
     {
         //Console.SetWindowSize(1900, 980);
         LoadAllExampleData();
@@ -103,25 +106,221 @@ public class Program
         });
 
         pt.PrintLine();
-        pt.PrintRow("", "FCM (Rand)", "MC-FCM (Rand)", "sSMC-FCM", "FC sSMC FCM");
+        pt.PrintRow("", "MC-sSMC-FCM(5%)", "MC-sSMC-FCM(10%)", "MC-sSMC-FCM(15%)", "MC-sSMC-FCM(20%)");
         pt.PrintLine();
         foreach (var dataInfo in datas)
         {
+            //var dataInfo = datas[2];
             var data = dataInfo.aCIDb;
-            var fcm = new FCM(data.X, data.C, 2);
-            fcm.ClustersGenerationMode = MC_FCM.CGMode.StupidRandom;
+            var fcm = new MC_sSMC_FCM(data.X, data.C, dataInfo.semiSupervised5);
             fcm._solve();
-            var mc_fcm = new MC_FCM(data.X, data.C);
-            mc_fcm.ClustersGenerationMode = MC_FCM.CGMode.StupidRandom;
+            var mc_fcm = new MC_sSMC_FCM(data.X, data.C, dataInfo.semiSupervised10);
             mc_fcm._solve();
-            var mc_fcm2 = new sSMC_FCM(data.X, data.C, dataInfo.semiSupervised);
+            var mc_fcm2 = new MC_sSMC_FCM(data.X, data.C, dataInfo.semiSupervised15);
             mc_fcm2._solve();
-            var mc_fcm3 = new MC_FCM(data.X, data.C);
+            var mc_fcm3 = new MC_sSMC_FCM(data.X, data.C, dataInfo.semiSupervised20);
             mc_fcm3._solve();
 
             pt.PrintRow(dataInfo.Name, fcm.Result.l, mc_fcm.Result.l, mc_fcm2.Result.l, mc_fcm3.Result.l);
 
-            var fcm_sswc = new SSWC(data.X, data.C, fcm.Result).Index;
+            var fcm_sswc = new SSWC(data.X, data.C, /*new FakeFCM_Result(data.X, data.expect, data.C)*/fcm.Result).Index;
+            var fcm_db = new DB(data.X, data.C, fcm.Result).Index;
+            var fcm_pbm = new PBM(data.X, data.C, fcm.Result).Index;
+            var fcm_accuracy = new Accuracy(data.X, data.C, data.expect, fcm.Result).Index;
+            var fcm_rand = new Rand(data.X, data.C, data.expect, fcm.Result).Index;
+            var fcm_jaccard = new Jaccard(data.X, data.C, data.expect, fcm.Result).Index;
+
+            var mc_fcm_sswc = new SSWC(data.X, data.C, mc_fcm.Result).Index;
+            var mc_fcm_db = new DB(data.X, data.C, mc_fcm.Result).Index;
+            var mc_fcm_pbm = new PBM(data.X, data.C, mc_fcm.Result).Index;
+            var mc_fcm_accuracy = new Accuracy(data.X, data.C, data.expect, mc_fcm.Result).Index;
+            var mc_fcm_rand = new Rand(data.X, data.C, data.expect, mc_fcm.Result).Index;
+            var mc_fcm_jaccard = new Jaccard(data.X, data.C, data.expect, mc_fcm.Result).Index;
+
+            var mc_fcm2_sswc = new SSWC(data.X, data.C, mc_fcm2.Result).Index;
+            var mc_fcm2_db = new DB(data.X, data.C, mc_fcm2.Result).Index;
+            var mc_fcm2_pbm = new PBM(data.X, data.C, mc_fcm2.Result).Index;
+            var mc_fcm2_accuracy = new Accuracy(data.X, data.C, data.expect, mc_fcm2.Result).Index;
+            var mc_fcm2_rand = new Rand(data.X, data.C, data.expect, mc_fcm2.Result).Index;
+            var mc_fcm2_jaccard = new Jaccard(data.X, data.C, data.expect, mc_fcm2.Result).Index;
+
+            var mc_fcm3_sswc = new SSWC(data.X, data.C, mc_fcm3.Result).Index;
+            var mc_fcm3_db = new DB(data.X, data.C, mc_fcm3.Result).Index;
+            var mc_fcm3_pbm = new PBM(data.X, data.C, mc_fcm3.Result).Index;
+            var mc_fcm3_accuracy = new Accuracy(data.X, data.C, data.expect, mc_fcm3.Result).Index;
+            var mc_fcm3_rand = new Rand(data.X, data.C, data.expect, mc_fcm3.Result).Index;
+            var mc_fcm3_jaccard = new Jaccard(data.X, data.C, data.expect, mc_fcm3.Result).Index;
+
+            var max_sswc = new[] { fcm_sswc, mc_fcm_sswc, mc_fcm2_sswc, mc_fcm3_sswc }.Max();
+            var min_db = new[] { fcm_db, mc_fcm_db, mc_fcm2_db, mc_fcm3_db }.Min();
+            var max_pbm = new[] { fcm_pbm, mc_fcm_pbm, mc_fcm2_pbm, mc_fcm3_pbm }.Max();
+            var max_accuracy = new[] { fcm_accuracy, mc_fcm_accuracy, mc_fcm2_accuracy, mc_fcm3_accuracy }.Max();
+            var max_rand = new[] { fcm_rand, mc_fcm_rand, mc_fcm2_rand, mc_fcm3_rand }.Max();
+            var max_jaccard = new[] { fcm_jaccard, mc_fcm_jaccard, mc_fcm2_jaccard, mc_fcm3_jaccard }.Max();
+
+            pt.PrintRow("    SSWC",
+                new ColumnContent()
+                {
+                    Content = fcm_sswc,
+                    Color = (fcm_sswc == max_sswc) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm_sswc,
+                    Color = (mc_fcm_sswc == max_sswc) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm2_sswc,
+                    Color = (mc_fcm2_sswc == max_sswc) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm3_sswc,
+                    Color = (mc_fcm3_sswc == max_sswc) ? ConsoleColor.Yellow : ConsoleColor.White
+                });
+            pt.PrintRow("    DB",
+                new ColumnContent()
+                {
+                    Content = fcm_db,
+                    Color = (fcm_db == min_db) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm_db,
+                    Color = (mc_fcm_db == min_db) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm2_db,
+                    Color = (mc_fcm2_db == min_db) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm3_db,
+                    Color = (mc_fcm3_db == min_db) ? ConsoleColor.Yellow : ConsoleColor.White
+                });
+            pt.PrintRow("    PBM",
+                new ColumnContent()
+                {
+                    Content = fcm_pbm,
+                    Color = (fcm_pbm == max_pbm) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm_pbm,
+                    Color = (mc_fcm_pbm == max_pbm) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm2_pbm,
+                    Color = (mc_fcm2_pbm == max_pbm) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm3_pbm,
+                    Color = (mc_fcm3_pbm == max_pbm) ? ConsoleColor.Yellow : ConsoleColor.White
+                });
+            pt.PrintRow("    ACC",
+                new ColumnContent()
+                {
+                    Content = fcm_accuracy,
+                    Color = (fcm_accuracy == max_accuracy) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm_accuracy,
+                    Color = (mc_fcm_accuracy == max_accuracy) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm2_accuracy,
+                    Color = (mc_fcm2_accuracy == max_accuracy) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm3_accuracy,
+                    Color = (mc_fcm3_accuracy == max_accuracy) ? ConsoleColor.Yellow : ConsoleColor.White
+                });
+            pt.PrintRow("    RAND",
+                new ColumnContent()
+                {
+                    Content = fcm_rand,
+                    Color = (fcm_rand == max_rand) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm_rand,
+                    Color = (mc_fcm_rand == max_rand) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm2_rand,
+                    Color = (mc_fcm2_rand == max_rand) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm3_rand,
+                    Color = (mc_fcm3_rand == max_rand) ? ConsoleColor.Yellow : ConsoleColor.White
+                });
+            pt.PrintRow("    JACC",
+                new ColumnContent()
+                {
+                    Content = fcm_jaccard,
+                    Color = (fcm_jaccard == max_jaccard) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm_jaccard,
+                    Color = (mc_fcm_jaccard == max_jaccard) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm2_jaccard,
+                    Color = (mc_fcm2_jaccard == max_jaccard) ? ConsoleColor.Yellow : ConsoleColor.White
+                },
+                new ColumnContent()
+                {
+                    Content = mc_fcm3_jaccard,
+                    Color = (mc_fcm3_jaccard == max_jaccard) ? ConsoleColor.Yellow : ConsoleColor.White
+                });
+
+            pt.PrintRow("", "", "", "", "");
+        }
+        pt.PrintLine();
+        Console.WriteLine();
+    }
+    public static void SSMC_FCM_Benchmark()
+    {
+        //Console.SetWindowSize(1900, 980);
+        LoadAllExampleData();
+        PrintTable pt = new PrintTable(new ColumnStyle[] {
+            new ColumnStyle(){Width=20},
+            new ColumnStyle(){Align=ColumnAlign.Right, Width=16},
+            new ColumnStyle(){Align=ColumnAlign.Right, Width=16},
+            new ColumnStyle(){Align=ColumnAlign.Right, Width=16},
+            new ColumnStyle(){Align=ColumnAlign.Right, Width = 16},
+        });
+
+        pt.PrintLine();
+        pt.PrintRow("", "sSMC-FCM (5%)", "sSMC-FCM (10%)", "sSMC-FCM (15%)", "sSMC-FCM (20%)");
+        pt.PrintLine();
+        foreach (var dataInfo in datas)
+        {
+            //var dataInfo = datas[2];
+            var data = dataInfo.aCIDb;
+            var fcm = new sSMC_FCM(data.X, data.C, dataInfo.semiSupervised5);
+            fcm._solve();
+            var mc_fcm = new sSMC_FCM(data.X, data.C, dataInfo.semiSupervised10);
+            mc_fcm._solve();
+            var mc_fcm2 = new sSMC_FCM(data.X, data.C, dataInfo.semiSupervised15);
+            mc_fcm2._solve();
+            var mc_fcm3 = new sSMC_FCM(data.X, data.C, dataInfo.semiSupervised20);
+            mc_fcm3._solve();
+
+            pt.PrintRow(dataInfo.Name, fcm.Result.l, mc_fcm.Result.l, mc_fcm2.Result.l, mc_fcm3.Result.l);
+
+            var fcm_sswc = new SSWC(data.X, data.C, /*new FakeFCM_Result(data.X, data.expect, data.C)*/fcm.Result).Index;
             var fcm_db = new DB(data.X, data.C, fcm.Result).Index;
             var fcm_pbm = new PBM(data.X, data.C, fcm.Result).Index;
             var fcm_accuracy = new Accuracy(data.X, data.C, data.expect, fcm.Result).Index;
@@ -279,7 +478,7 @@ public class Program
                     Color = (mc_fcm3_jaccard == max_jaccard) ? ConsoleColor.Yellow : ConsoleColor.White
                 });
 
-            pt.PrintRow("", "", "", "", "", "");
+            pt.PrintRow("", "", "", "", "");
         }
         pt.PrintLine();
         Console.WriteLine();
@@ -511,8 +710,13 @@ public class Program
         foreach (var dataInfo in datas)
         {
             dataInfo.aCIDb = new ACIDbDeserializer(dataInfo.Path, dataInfo.Delimiter);
-            var gen = new SemiSupervisedGenerator(dataInfo.aCIDb.expect, 20);
-            gen.WriteFile(dataInfo.Path + ".ss");
+            for(int i = 1; i < 5; i++)
+            {
+                int v = i * 5;
+                int x = dataInfo.aCIDb.expect.Count * v / 100;
+                var gen = new SemiSupervisedGenerator(dataInfo.aCIDb.expect, x);
+                gen.WriteFile(dataInfo.Path + $".p{v}.ss");
+            }
         }
             
     }
@@ -521,15 +725,23 @@ public class Program
         foreach (var dataInfo in datas)
         {
             dataInfo.aCIDb = new ACIDbDeserializer(dataInfo.Path, dataInfo.Delimiter);
-            var gen = new SemiSupervisedGenerator(dataInfo.Path + ".ss");
-            dataInfo.semiSupervised = gen.semiSupervised;
+            var gen = new SemiSupervisedGenerator(dataInfo.Path + ".p5.ss");
+            dataInfo.semiSupervised5 = gen.semiSupervised;
+            gen = new SemiSupervisedGenerator(dataInfo.Path + ".p10.ss");
+            dataInfo.semiSupervised10 = gen.semiSupervised;
+            gen = new SemiSupervisedGenerator(dataInfo.Path + ".p15.ss");
+            dataInfo.semiSupervised15 = gen.semiSupervised;
+            gen = new SemiSupervisedGenerator(dataInfo.Path + ".p20.ss");
+            dataInfo.semiSupervised20 = gen.semiSupervised;
         }
 
     }
     static void Main(string[] args)
     {
-        FC_SSMC_FCM_Benchmark();
-        //BenchMark();
+        //CreateSemiSupervisonOfAllData();
+        //FC_SSMC_FCM_Benchmark();
+        //SSMC_FCM_Benchmark();
+        BenchMark();
         //Console.ReadLine();
     }
 

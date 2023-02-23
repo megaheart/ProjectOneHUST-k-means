@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static ProjectOneClasses.MC_FCM;
-using static ProjectOneClasses.sSMC_FCM;
 
 namespace ProjectOneClasses
 {
@@ -21,11 +21,11 @@ namespace ProjectOneClasses
         {
             if (C < 1) throw new Exception("C must be more than 0");
             if (C > X.Count) throw new Exception("C cannot be more than number of X");
-            this.X = X;
+            this.X = X.ToImmutableArray();
             this.C = C;
             this.epsilon = epsilon;
             this.alpha = alpha;
-            this.Y = Y;
+            this.Y = Y.ToImmutableDictionary();
         }
         public class MC_sSMC_FCM_Result : IFCM_Result
         {
@@ -97,12 +97,12 @@ namespace ProjectOneClasses
             }
 
             const double ml = 1.1, _mu = 4.1;
-            //B0: Generate m
-            double[] m = _GetFuzzificationCoefficients(X, C, ml, _mu);
-            //B1: Generate first clusters
-            V = _GenerateFirstCClusters(X, C, m, epsilon);
+            //B0: Generate m + B1: Generate first clusters
+            double[] m;
+            GenerateFuzzificationCoefficientsAndFirstCClusters_MaxFuzzificationCoefficientGroups(X, Y, C, ml, _mu, epsilon, out m, out V);
 
-
+            double[] M2 = new double[n];
+            Array.Copy(m, M2, m.Length);
 
             //Main
             int l = 0;
@@ -144,6 +144,7 @@ namespace ProjectOneClasses
                 foreach (var y in Y)
                 {
                     int i = y.Key, k = y.Value;
+                    sum_mu_i_j[i] = 0;
                     //Get d_min (2.11)
                     double dmin = D[i].Min();
                     //Calculate d(i, j) (2.11)
@@ -164,15 +165,18 @@ namespace ProjectOneClasses
                         }
                     }
                 }
-                //Calculate M' (3.3)
 
-                double[] M2 = new double[n];
+                //Calculate M' (3.3)
 
                 foreach (var y in Y)
                 {
                     int i = y.Key, k = y.Value;
                     //Calculate M' (3.3)
-                    double m2 = M2[i] = CalculateM2(Y/*, n, C*/, m[i], alpha, U);
+                    
+                    if (l < 4)
+                        M2[i] = CalculateM2(Y, M2[i], alpha, U[i][k]);
+                    double m2 = M2[i];
+
                     double aa = 1 / (m2 - 1), bb = (m2 - m[i]) / (m2 - 1);
                     //Calculate mu(i, k) (2.13)
                     double right = Math.Pow(Math.Pow(D[i][k], 2) * m2, -aa);
@@ -235,15 +239,10 @@ namespace ProjectOneClasses
 
             Result = new MC_sSMC_FCM_Result(V, U, l);
         }
-        public static double CalculateM2(IReadOnlyDictionary<int, int> Y/*, int n, int C*/, double M, double alpha, double[][] U)
+        public static double CalculateM2(IReadOnlyDictionary<int, int> Y, double M, double alpha, double Uik)
         {
             double right_min = int.MaxValue;
-            foreach (var y in Y)
-            {
-                int i = y.Key, k = y.Value;
-                double right = M * Math.Pow((1 - alpha) / ((1 / U[i][k]) - 1), M - 1);
-                if (right < right_min) right_min = right;
-            }
+            double right = M * Math.Pow((1 - alpha) / ((1 / Uik) - 1), M - 1);
             double M2 = Math.Max(M, -1 / Math.Log(alpha)); // Start value of M2
             double left = M2 * Math.Pow(alpha, M2 - 1);
             while (left > right_min)
@@ -263,32 +262,186 @@ namespace ProjectOneClasses
             return sum;
 
         }
-        public double[][] _GenerateFirstCClusters(IReadOnlyList<double[]> X, int C, double[] m, double epsilon)
+        public enum CGMode
         {
-            return _GenerateFirstCClusters_MaxFuzzificationCoefficients(X, C, m, epsilon);
+            //MaxFuzzificationCoefficients,
+            //MinFuzzificationCoefficients,
+            //ChooseCFromXClustersRandomly,
+            //StupidRandom,
+            //StupidRamdomWithPartition,
+            //AverageInPartition,
+            //Choose max fuzzification coefficients groups
+            MaxFuzzificationCoefficientGroups
         }
-        public static double[][] _GenerateFirstCClusters_MaxFuzzificationCoefficients(IReadOnlyList<double[]> X, int C, double[] m, double epsilon)
+        public CGMode ClustersGenerationMode { get; set; } = CGMode.MaxFuzzificationCoefficientGroups;
+        public static void GenerateFuzzificationCoefficientsAndFirstCClusters_MaxFuzzificationCoefficientGroups(
+            IReadOnlyList<double[]> X, IReadOnlyDictionary<int, int> Y, int C, double ml, double mu, double epsilon, out double[] m, out double[][] V)
         {
-            PriorityQueue<double[], double> priorityQueue = new PriorityQueue<double[], double>(C);
-            int i = 0;
-            for (i = 0; i < X.Count; i++)
+            int n = X.Count;
+            int nn = n / C;
+            int dimension = X[0].Length;
+            //Calculate density index of each point in X list
+            double[] delta2 = new double[n];
+            for (int i = 0; i < n; i++) delta2[i] = 0;
+            PriorityQueue<XPoint, double>[] priorityQueues = new PriorityQueue<XPoint, double>[n];
+            for (int i = 0; i < n; i++) priorityQueues[i] = new PriorityQueue<XPoint, double>(nn);
+            double pushToPriorityQueues(int i, int xi, double d)
             {
-                if (priorityQueue.Count < C) priorityQueue.Enqueue(X[i], -m[i]);
-                else priorityQueue.EnqueueDequeue(X[i], -m[i]);
+                double dd = d;
+                if (priorityQueues[i].Count < nn) priorityQueues[i].Enqueue(new XPoint(xi, d), -d);
+                else
+                {
+                    XPoint x_d_max = priorityQueues[i].EnqueueDequeue(new XPoint(xi, d), -d);
+                    dd -= x_d_max.d;
+                }
+                return dd;
             }
-            double[][] V = new double[C][];
-            double[] _x1, _x2;
-            int l;
-            for (i = 0; i < C; i++)
+            //Calculate the distance between two point in X list
+            /*double[][] delta = new double[n - 1][];
+            double getDelta(int i, int j)
             {
-                _x1 = priorityQueue.Dequeue();
-                l = _x1.Length;
-                _x2 = new double[l];
-                Array.Copy(_x1, 0, _x2, 0, l);
-                _x2[0] += epsilon;
-                V[i] = _x2;
+                if (i == j) return double.PositiveInfinity;
+                if (i > j) return delta[j][i - j - 1];
+                return delta[i][j - i - 1];
+            }*/
+            for (int i = 0; i < n - 1; i++)
+            {
+                //delta[i] = new double[n - i - 1];
+                for (int j = i + 1; j < n; j++)
+                {
+                    var d = Math.Sqrt(GetSquareDistanse(X[i], X[j]));
+                    //delta[i][j] = d;
+                    delta2[i] += pushToPriorityQueues(i, j, d);
+                    delta2[j] += pushToPriorityQueues(j, i, d);
+                }
             }
-            return V;
+
+            XPoint[] delta3 = new XPoint[n];
+            for (int i = 0; i < n; i++)
+            {
+                delta3[i].d = delta2[i];
+                delta3[i].i = i;
+            }
+            Array.Sort(delta3, (a, b) =>
+            {
+                return b.d.CompareTo(a.d);
+            });
+
+            //Calculate power number of function (alpha)
+            double delta2_min = delta3[n - 1].d, delta2_max_min = delta3[0].d - delta2_min;
+            double median = GetMedian(delta2);
+            double alpha = Math.Log(0.5, (median - delta2_min) / delta2_max_min);
+            //Calculate fuzzification coefficients
+            m = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                m[i] = ml + (mu - ml) * Math.Pow((delta2[i] - delta2_min) / delta2_max_min, alpha);
+            }
+
+            //Generate d
+            List<int> xis = new List<int>(C);
+            int[] zIndexs = new int[n];
+            for (int i = 0; i < n; i++) zIndexs[i] = n;
+            double[][] maxGroupsV = new double[n][];
+            int maxGroupSize;
+            xis.Clear();
+
+            //create cluster for Supervised point
+            {
+                int[] V_count = new int[C];
+                int[] supervisedGroupIndexs = new int[C];
+                for(int k = 0; k < C; k++)
+                {
+                    supervisedGroupIndexs[k] = n;
+                }
+                foreach (var y in Y)
+                {
+                    int i = y.Key, k = y.Value;
+                    double[] supervisedGroup;
+                    if (supervisedGroupIndexs[k] == n)
+                    {
+                        supervisedGroup = new double[dimension];
+                        Array.Copy(X[i], supervisedGroup, dimension);
+                        xis.Add(i);
+                        zIndexs[i] = i;
+                        V_count[k] = 1;
+                        supervisedGroupIndexs[k] = i;
+                        maxGroupsV[i] = supervisedGroup; 
+                    }
+                    else
+                    {
+                        supervisedGroup = maxGroupsV[supervisedGroupIndexs[k]];
+                        zIndexs[i] = supervisedGroupIndexs[k];
+                        V_count[k]++;
+                        for (int j = 0; j < dimension; j++)
+                        {
+                            supervisedGroup[j] += X[i][j];
+                        }
+                    }
+                    
+                }
+                for (int k = 0; k < C; k++)
+                {
+                    int i = supervisedGroupIndexs[k];
+                    if(i != n)
+                    {
+                        double[] supervisedGroup = maxGroupsV[i];
+                        if (V_count[k] == 1)
+                        {
+                            for (int j = 0; j < dimension; j++)
+                            {
+                                supervisedGroup[j] += 2 * epsilon;
+                            }
+                        }
+                        else
+                        {
+                            for (int j = 0; j < dimension; j++)
+                            {
+                                supervisedGroup[j] /= V_count[k];
+                            }
+                        }
+                    }
+                }
+            }
+
+            //create cluster for non-Supervised point
+            for (int i = n - 1; i > -1 && xis.Count < C; i--)
+            {
+                int xi = delta3[i].i;
+                if (zIndexs[xi] != n) continue;
+                xis.Add(xi);
+                maxGroupSize = 1;
+                zIndexs[xi] = xi;
+                maxGroupsV[xi] = new double[dimension];
+                Array.Copy(X[xi], maxGroupsV[xi], dimension);
+                XPoint p;
+                while (priorityQueues[xi].TryDequeue(out p, out _))
+                {
+                    if (zIndexs[p.i] != n) continue;
+                    zIndexs[p.i] = xi;
+                    maxGroupSize++;
+                    for (int j = 0; j < dimension; ++j)
+                    {
+                        maxGroupsV[xi][j] += X[p.i][j];
+                    }
+
+                }
+                if (maxGroupSize == 1)
+                {
+                    maxGroupsV[xi][0] += epsilon;
+                }
+                else
+                    for (int j = 0; j < dimension; ++j)
+                    {
+                        maxGroupsV[xi][j] /= maxGroupSize;
+                    }
+            }
+            V = new double[C][];
+            for (int i = 0; i < C; ++i)
+            {
+                V[i] = maxGroupsV[xis[i]];
+            }
         }
+        
     }
 }

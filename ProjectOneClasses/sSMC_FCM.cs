@@ -1,5 +1,7 @@
-﻿using System;
+﻿using ProjectOneClasses.ValidityCriterias.External;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -19,12 +21,12 @@ namespace ProjectOneClasses
         {
             if (C < 1) throw new Exception("C must be more than 0");
             if (C > X.Count) throw new Exception("C cannot be more than number of X");
-            this.X = X;
+            this.X = X.ToImmutableArray();
             this.C = C;
             this.epsilon = epsilon;
             this.M = M;
             this.alpha = alpha;
-            this.Y = Y;
+            this.Y = Y.ToImmutableDictionary();
         }
         public class sSMC_FCM_Result : IFCM_Result
         {
@@ -93,8 +95,9 @@ namespace ProjectOneClasses
                 D[i] = new double[C];
                 mu[i] = new double[C];
             }
+            double M2 = M;
             //B1: Generate first clusters
-            V = _GenerateFirstCClusters(X, C, epsilon);
+            V = _GenerateFirstCClusters(X, Y, C, epsilon);
 
 
             
@@ -160,7 +163,8 @@ namespace ProjectOneClasses
                     }
                 }
                 //Calculate M' (3.3)
-                double M2 = CalculateM2(Y/*, n, C*/, M, alpha, U);
+                if(l < 4)
+                    M2 = CalculateM2(Y/*, n, C*/, M2, alpha, U);
                 double aa = 1 / (M2 - 1), bb = (M2 - M)/(M2 - 1);
 
                 foreach (var y in Y)
@@ -225,6 +229,7 @@ namespace ProjectOneClasses
             }
 
             Result = new sSMC_FCM_Result(V, U, l);
+            
         }
         public static double CalculateM2(IReadOnlyDictionary<int, int> Y/*, int n, int C*/, double M, double alpha, double[][] U)
         {
@@ -254,34 +259,67 @@ namespace ProjectOneClasses
             return sum;
 
         }
-        public double[][] _GenerateFirstCClusters(IReadOnlyList<double[]> X, int C, double epsilon)
+        public double[][] _GenerateFirstCClusters(IReadOnlyList<double[]> X, IReadOnlyDictionary<int, int> Y, int C, double epsilon)
         {
-            return _GenerateFirstCClusters_StupidRandom(X, C);
-        }
-        public static double[][] _GenerateFirstCClusters_StupidRandom(IReadOnlyList<double[]> X, int C)
-        {
-            Random r = new Random();
+            Random r = Random.Shared;
             int dimension = X[0].Length;
+            int n = X.Count;
             double[][] V = new double[C][];
-            double[] min = new double[dimension];
-            double[] max = new double[dimension];
-            for (int j = 0; j < dimension; j++)
-            {
-                min[j] = int.MaxValue;
-                max[j] = int.MinValue;
-            }
-            for (int i = 0; i < X.Count; i++)
-            {
-                for (int j = 0; j < dimension; j++)
-                {
-                    if (min[j] > X[i][j]) min[j] = X[i][j];
-                    if (max[j] < X[i][j]) max[j] = X[i][j];
-                }
-            }
             for (int k = 0; k < C; k++)
             {
                 V[k] = new double[dimension];
-                for (int j = 0; j < dimension; j++) V[k][j] = min[j] + (max[j] - min[j]) * r.NextDouble();
+            }
+
+            int[] V_count = new int[C];
+            foreach (var y in Y)
+            {
+                int i = y.Key, k = y.Value;
+                V_count[k]++;
+                for (int j = 0; j < dimension; j++)
+                {
+                    V[k][j] += X[i][j];
+                }
+            }
+
+            double[] centroid = new double[dimension];
+            foreach (var x in X)
+            {
+                for (int j = 0; j < dimension; j++)
+                {
+                    centroid[j] += x[j];
+                }
+            }
+            for (int j = 0; j < dimension; j++)
+            {
+                centroid[j] /= n;
+            }
+            var choose = X.Where((x, index) => Y.TryGetValue(index, out _)).OrderBy(x => r.Next()).Take(C).GetEnumerator();
+
+            for (int k = 0; k < C; k++)
+            {
+                if (V_count[k] == 0)
+                {
+                    choose.MoveNext();
+                    double[] x = choose.Current;
+                    for (int j = 0; j < dimension; j++)
+                    {
+                        V[k][j] += (x[j]*3 + centroid[j])/4;
+                    }
+                }
+                else if (V_count[k] == 1)
+                {
+                    for (int j = 0; j < dimension; j++)
+                    {
+                        V[k][j] += 2*epsilon;
+                    }
+                }
+                else
+                {
+                    for (int j = 0; j < dimension; j++)
+                    {
+                        V[k][j] /= V_count[k];
+                    }
+                }
             }
             return V;
         }

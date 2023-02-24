@@ -14,7 +14,7 @@ namespace ProjectOneClasses.Utilities
         public IReadOnlyList<double[]> X { get; private set; }
         public int C { get; private set; }
         public IReadOnlyList<int> expect { get; private set; }
-        public ACIDbDeserializer(string path, char delimiter = ',')
+        public ACIDbDeserializer(string path, char? delimiter = null)
         {
             string[] lines = File.ReadAllLines(path);
             
@@ -24,9 +24,24 @@ namespace ProjectOneClasses.Utilities
             this.expect = expect;
             var X = new List<double[]>(lines.Length);
             this.X = X;
-            for (int l = 0; l < lines.Length; l++)
+            char _delimiter = delimiter ?? ',';
+
+            if (!delimiter.HasValue)
             {
-                string[] ds = lines[l].Split(delimiter);
+                if (lines[0].IndexOf(',') == -1)
+                {
+                    _delimiter = ' ';
+                    if (lines[0].IndexOf(' ') == -1)
+                    {
+                        throw new Exception("Invalid Input");
+                    }
+                }
+                
+            }
+
+            for (int l = 1; l < lines.Length; l++)
+            {
+                string[] ds = lines[l].Split(_delimiter);
                 if (ds.Length < 2) continue;
                 double[] x = new double[ds.Length - 1];
                 for(int i = 0; i < x.Length; i++)

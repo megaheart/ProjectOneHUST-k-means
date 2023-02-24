@@ -293,7 +293,7 @@ namespace ProjectOneClasses
             {
                 centroid[j] /= n;
             }
-            var choose = X.Where((x, index) => Y.TryGetValue(index, out _)).OrderBy(x => r.Next()).Take(C).GetEnumerator();
+            var choose = X.Where((x, index) => !Y.TryGetValue(index, out _)).OrderBy(x => r.Next()).Take(C).GetEnumerator();
 
             for (int k = 0; k < C; k++)
             {

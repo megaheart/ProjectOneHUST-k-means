@@ -4,9 +4,210 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProjectOneHUST"
+        xmlns:avalon="http://icsharpcode.net/sharpdevelop/avalonedit"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" WindowState="Maximized"
+        Width="1500"
+        Height="800"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="16"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}">
+    
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="500"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
 
+        
+        <materialDesign:ColorZone Grid.ColumnSpan="2" Height="80" Padding="16"
+                                  materialDesign:ElevationAssist.Elevation="Dp4"
+                                  Mode="PrimaryMid">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="20" FontWeight="DemiBold" VerticalAlignment="Center">
+                    Project I - Trần Phúc Mạnh Linh 20200352 - GVHD PGS. Trần Đình Khang: Tìm hiểu, viết lại, thử nghiệm cải tiến thuật toán thuật toán FCM, FC-FCM, sSMC-FCM.
+                </TextBlock>
+            </StackPanel>
+        </materialDesign:ColorZone>
+        <ProgressBar x:Name="LoadingBar" Visibility="Hidden" IsIndeterminate="True" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Foreground="#005cb2"/>
+        <materialDesign:Card Grid.Row="1" Padding="32" Margin="16">
+            <StackPanel>
+                <StackPanel x:Name="Overview_Panel" Visibility="Collapsed">
+                    <TextBlock FontSize="20" FontWeight="DemiBold" Foreground="#FF363636"
+                           Style="{DynamicResource MaterialDesignTitleTextBlock}">
+                    Giới thiệu</TextBlock>
+                    <TextBlock Margin="15,5" TextWrapping="Wrap">Phần mềm dùng để chạy các thuật toán như FCM, MC-FCM, sSMC-FCM, FC-sSMC-FCM (Thuật toán kết hợp giữa MC-FCM và sSMC-FCM)</TextBlock>
+                    <TextBlock FontSize="20" FontWeight="DemiBold" Foreground="#FF363636"
+                           Style="{DynamicResource MaterialDesignTitleTextBlock}">
+                    Hướng dẫn sử dụng</TextBlock>
+                    <TextBlock Margin="15,5">Nhập file > Chọn thuật toán > Chạy</TextBlock>
+
+                </StackPanel>
+                <StackPanel x:Name="Result_Panel">
+                    <TextBlock FontSize="20" FontWeight="DemiBold" Foreground="#FF363636"
+                           Style="{DynamicResource MaterialDesignTitleTextBlock}">
+                    Thông tin khi chạy</TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="15, 5">- Số vòng lặp thực hiện:</TextBlock>
+                        <TextBlock Margin="0,5,5,5" x:Name="CycleTxt"></TextBlock>
+                    </StackPanel>
+                    <TextBlock FontSize="20" FontWeight="DemiBold" Foreground="#FF363636"
+                           Style="{DynamicResource MaterialDesignTitleTextBlock}">
+                    Tập tâm cụm</TextBlock>
+                    <Border Margin="15,5" CornerRadius="5" BorderBrush="Gray" BorderThickness="1">
+                        <StackPanel>
+                            <Border Height="30" CornerRadius="5,5,0,0" BorderBrush="Gray" BorderThickness="0,0,0,2">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Click="Button_Click_CopyClustersInfo"
+                                          Style="{StaticResource MaterialDesignIconButton}"
+                                          ToolTip="Copy tập các đỉnh" Height="30">
+                                        <materialDesign:PackIcon Kind="ContentCopy" Height="18"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                            <avalon:TextEditor ShowLineNumbers="True" MaxHeight="200" Margin="5,5" x:Name="ClustersTxt" Text="">
+                            </avalon:TextEditor>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock FontSize="20" FontWeight="DemiBold" Foreground="#FF363636"
+                           Style="{DynamicResource MaterialDesignTitleTextBlock}">
+                    Độ đo hiệu năng</TextBlock>
+                    <ListView x:Name="Validation_Result" >
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn DisplayMemberBinding="{Binding Name}" Header="Độ đo"/>
+                                <GridViewColumn Header="Chỉ số" Width="100">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Width="80" TextAlignment="Right" Text="{Binding Index, StringFormat={}{0:N6}}"></TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Copy">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button DataContext="{Binding Index, StringFormat={}{0:N6}}" 
+                                                    Click="Button_Click_CopyContext"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Copy chỉ số" Height="18" Width="18" Margin="15,0,0,0">
+                                                <materialDesign:PackIcon Kind="ContentCopy" Height="18"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </StackPanel>
+            </StackPanel>
+        </materialDesign:Card>
+        <materialDesign:Card Grid.Row="1" Grid.Column="1" Padding="32" Margin="16">
+            <StackPanel>
+                <Border Background="{DynamicResource MaterialDesignBackground}">
+                    <GroupBox
+                            Header="File đầu vào"
+                            Style="{StaticResource MaterialDesignGroupBox}"
+                            UseLayoutRounding="True">
+                        <StackPanel>
+                            <TextBlock x:Name="InputFilePathTxt" TextWrapping="Wrap" Text="No Input Found" />
+                            <Button Style="{StaticResource MaterialDesignRaisedDarkButton}" Margin="15" Width="150"
+                                    Foreground="White" Click="Button_Click_ImportInputFile">
+                                Nhập file
+                            </Button>
+                        </StackPanel>
+                        
+                    </GroupBox>
+                </Border>
+                
+                <Border Margin="0,15,0,0" Background="{DynamicResource MaterialDesignBackground}">
+                    <GroupBox
+                            Header="Lựa chọn thuật toán"
+                            Style="{StaticResource MaterialDesignGroupBox}"
+                            UseLayoutRounding="True">
+                        <StackPanel>
+                            <RadioButton Content="FCM" DataContext="0" Checked="RadioButton_Checked_SelectAlgorithms"
+                                         GroupName="Algorithms" Margin="5" IsChecked="True" x:Name="ChooseBtn_FCM"
+                                         Style="{StaticResource MaterialDesignRadioButton}" />
+                            <StackPanel Margin="15,5" Visibility="{Binding ElementName=ChooseBtn_FCM, Path=IsChecked, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Margin="0,5,0,5">Chọn Thuật toán khởi tạo tâm cụm: </TextBlock>
+                                <ComboBox Width="200" HorizontalAlignment="Left" x:Name="ClusterGenOptions_FCM">
+                                    <ComboBoxItem Content="Ngẫu nhiên" IsSelected="True"/>
+                                    <ComboBoxItem Content="Chọn cụm mật độ cao" />
+                                </ComboBox>
+                            </StackPanel>
+                            <RadioButton Content="MC-FCM" DataContext="1" x:Name="ChooseBtn_MC_FCM"
+                                         GroupName="Algorithms" Margin="5" Checked="RadioButton_Checked_SelectAlgorithms"
+                                         Style="{StaticResource MaterialDesignRadioButton}" />
+                            <StackPanel Margin="15,5" Visibility="{Binding ElementName=ChooseBtn_MC_FCM, Path=IsChecked, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Margin="0,5,0,5">Chọn Thuật toán khởi tạo tâm cụm:</TextBlock>
+                                <ComboBox Width="200" HorizontalAlignment="Left" x:Name="ClusterGenOptions_MC_FCM">
+                                    <ComboBoxItem Content="Ngẫu nhiên" IsSelected="True" />
+                                    <ComboBoxItem Content="Chọn cụm mật độ cao" />
+                                </ComboBox>
+                            </StackPanel>
+                            <RadioButton Content="sSMC-FCM" DataContext="2" x:Name="ChooseBtn_sSMC_FCM"
+                                         GroupName="Algorithms" Margin="5" Checked="RadioButton_Checked_SelectAlgorithms"
+                                         Style="{StaticResource MaterialDesignRadioButton}" />
+                            <DockPanel Margin="15,5" Visibility="{Binding ElementName=ChooseBtn_sSMC_FCM, Path=IsChecked, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock>Mức độ giám sát:</TextBlock>
+                                    <TextBlock Margin="5,0,0,0" TextAlignment="Right" Width="25"
+                                               Text="{Binding ElementName=SupervisionDegreeInput_sSMC, Path=Value}"></TextBlock>
+                                    <TextBlock>%</TextBlock>
+                                </StackPanel>
+                                <Slider Margin="15,0,0,0" x:Name="SupervisionDegreeInput_sSMC"
+                                      Minimum="0" Maximum="100" Value="15"
+                                      Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                      TickFrequency="5"
+                                      TickPlacement="BottomRight"
+                                       />     
+                            </DockPanel>
+                            <RadioButton Content="MC-sSMC-FCM" DataContext="3" x:Name="ChooseBtn_MC_sSMC_FCM"
+                                         GroupName="Algorithms" Margin="5" Checked="RadioButton_Checked_SelectAlgorithms"
+                                         Style="{StaticResource MaterialDesignRadioButton}" />
+                            <DockPanel Margin="15,5" Visibility="{Binding ElementName=ChooseBtn_MC_sSMC_FCM, Path=IsChecked, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock>Mức độ giám sát:</TextBlock>
+                                    <TextBlock Margin="5,0,0,0" TextAlignment="Right" Width="25"
+                                               Text="{Binding ElementName=SupervisionDegreeInput_MC_sSMC, Path=Value}"></TextBlock>
+                                    <TextBlock>%</TextBlock>
+                                </StackPanel>
+                                <Slider Margin="15,0,0,0" x:Name="SupervisionDegreeInput_MC_sSMC"
+                                      Minimum="0" Maximum="100" Value="15"
+                                      Style="{StaticResource MaterialDesignDiscreteSlider}"
+                                      TickFrequency="5"
+                                      TickPlacement="BottomRight"
+                                       />
+                            </DockPanel>
+                        </StackPanel>
+
+                    </GroupBox>
+                </Border>
+                <Button Style="{StaticResource MaterialDesignRaisedButton}" Width="250"
+                        Foreground="White" Click="Button_Click_RunAlgorithm"
+                        Margin="15"
+                        materialDesign:ButtonProgressAssist.IsIndeterminate="True"
+                        materialDesign:ButtonProgressAssist.IsIndicatorVisible="False"
+                        materialDesign:ButtonProgressAssist.Value="-1" Content="Chạy"/>
+            </StackPanel>
+        </materialDesign:Card>
+        <materialDesign:DialogHost CloseOnClickAway="True" Grid.ColumnSpan="2" Grid.RowSpan="2">
+            <materialDesign:DialogHost.DialogContentTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="20">
+                        <TextBlock Text="{Binding}" />
+                    </StackPanel>
+                </DataTemplate>
+            </materialDesign:DialogHost.DialogContentTemplate>
+        </materialDesign:DialogHost>
     </Grid>
 </Window>

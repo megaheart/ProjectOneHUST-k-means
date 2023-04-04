@@ -18,7 +18,7 @@ public class Data
 }
 public class Program
 {
-    static string DataSetFolder = @"C:\Users\linh2\OneDrive - Hanoi University of Science and Technology\Hust\HK 2022-1\Project I [IT3150]\prj1";
+    static string DataSetFolder = Path.GetFullPath("DataSet");
     public static Data[] datas = new Data[] {
         new Data(){Name = "Iris", Path=$"{DataSetFolder}\\iris.data"},
         new Data(){Name = "Iris Shuffled", Path=$"{DataSetFolder}\\iris2.data"},
@@ -739,8 +739,8 @@ public class Program
     }
     static void Main(string[] args)
     {
-        //CreateSemiSupervisonOfAllData();
-        MC_SSMC_FCM_Benchmark();
+        CreateSemiSupervisonOfAllData();
+        //MC_SSMC_FCM_Benchmark();
         //SSMC_FCM_Benchmark();
         //BenchMark();
         //Console.ReadLine();

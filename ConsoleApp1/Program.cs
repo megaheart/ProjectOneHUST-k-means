@@ -18,15 +18,16 @@ public class Data
 }
 public class Program
 {
+    static string DataSetFolder = @"C:\Users\linh2\OneDrive - Hanoi University of Science and Technology\Hust\HK 2022-1\Project I [IT3150]\prj1";
     public static Data[] datas = new Data[] {
-        new Data(){Name = "Iris", Path=@"C:\Users\linh2\Downloads\prj1\iris.data"},
-        new Data(){Name = "Iris Shuffled", Path=@"C:\Users\linh2\Downloads\prj1\iris2.data"},
-        new Data(){Name = "Wine", Path=@"C:\Users\linh2\Downloads\prj1\wine.data"},
-        new Data(){Name = "Statlog(Heart)", Path=@"C:\Users\linh2\Downloads\prj1\heart.dat", Delimiter=' '},
-        new Data(){Name = "Vertebral Column(2C)", Path=@"C:\Users\linh2\Downloads\prj1\column_2C.dat", Delimiter=' '},
-        new Data(){Name = "Vertebral Column(3C)", Path=@"C:\Users\linh2\Downloads\prj1\column_3C.dat", Delimiter=' '},
-        new Data(){Name = "Glass", Path=@"C:\Users\linh2\Downloads\prj1\glass.data"},
-        new Data(){Name = "Bezdek Iris", Path=@"C:\Users\linh2\Downloads\prj1\bezdekIris.data"},
+        new Data(){Name = "Iris", Path=$"{DataSetFolder}\\iris.data"},
+        new Data(){Name = "Iris Shuffled", Path=$"{DataSetFolder}\\iris2.data"},
+        new Data(){Name = "Wine", Path=$"{DataSetFolder}\\wine.data"},
+        new Data(){Name = "Statlog(Heart)", Path=$"{DataSetFolder}\\heart.dat", Delimiter=' '},
+        new Data(){Name = "Vertebral Column(2C)", Path=$"{DataSetFolder}\\column_2C.dat", Delimiter=' '},
+        new Data(){Name = "Vertebral Column(3C)", Path=$"{DataSetFolder}\\column_3C.dat", Delimiter=' '},
+        new Data(){Name = "Glass", Path=$"{DataSetFolder}\\glass.data"},
+        new Data(){Name = "Bezdek Iris", Path=$"{DataSetFolder}\\bezdekIris.data"},
     };
     public static void MC_FCM_Validate()
     {
@@ -739,9 +740,9 @@ public class Program
     static void Main(string[] args)
     {
         //CreateSemiSupervisonOfAllData();
-        //FC_SSMC_FCM_Benchmark();
+        MC_SSMC_FCM_Benchmark();
         //SSMC_FCM_Benchmark();
-        BenchMark();
+        //BenchMark();
         //Console.ReadLine();
     }
 

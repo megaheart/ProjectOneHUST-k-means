@@ -14,7 +14,8 @@ namespace ProjectOneClasses.Utilities
         public IReadOnlyList<double[]> X { get; private set; }
         public int C { get; private set; }
         public IReadOnlyList<int> expect { get; private set; }
-        public ACIDbDeserializer(string path, char? delimiter = null)
+        public bool IsNormalized { get; private set; }
+        public ACIDbDeserializer(string path, char? delimiter = null, bool isNormalized = false)
         {
             string[] lines = File.ReadAllLines(path);
             
@@ -25,6 +26,8 @@ namespace ProjectOneClasses.Utilities
             var X = new List<double[]>(lines.Length);
             this.X = X;
             char _delimiter = delimiter ?? ',';
+
+            //Automatically find delimiter
 
             if (!delimiter.HasValue)
             {
@@ -39,7 +42,8 @@ namespace ProjectOneClasses.Utilities
                 
             }
 
-            for (int l = 1; l < lines.Length; l++)
+            //deserialize csv text -> object
+            for (int l = 0; l < lines.Length; l++)
             {
                 string[] ds = lines[l].Split(_delimiter);
                 if (ds.Length < 2) continue;
@@ -63,6 +67,27 @@ namespace ProjectOneClasses.Utilities
                 }
             }
             C = NameToIndex.Count;
+
+            //Normalize
+            if (isNormalized)
+            {
+                int dimension = X[0].Length;
+                double[] max = new double[dimension];
+                for (int i = 1; i < X.Count; i++)
+                {
+                    for (int j = 1; j < dimension; j++)
+                    {
+                        max[j] = Math.Max(max[j], X[i][j]);
+                    }
+                }
+                for (int i = 1; i < X.Count; i++)
+                {
+                    for (int j = 1; j < dimension; j++)
+                    {
+                        X[i][j] /= max[j];
+                    }
+                }
+            }
         }
     }
 }

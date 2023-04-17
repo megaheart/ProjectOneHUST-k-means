@@ -1,28 +1,17 @@
-﻿using ICSharpCode.AvalonEdit;
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
+using Microsoft.Win32;
+using ProjectOneClasses;
 using ProjectOneClasses.Utilities;
+using ProjectOneClasses.ValidityCriterias.External;
+using ProjectOneClasses.ValidityCriterias.Relative.OptimizationLike;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using Microsoft.Win32;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Threading;
-using ProjectOneClasses;
-using System.Windows.Markup;
-using ProjectOneClasses.ValidityCriterias.External;
-using ProjectOneClasses.ValidityCriterias.Relative.OptimizationLike;
 
 namespace ProjectOneHUST
 {
@@ -59,8 +48,8 @@ namespace ProjectOneHUST
                         .Show("Đầu vào phải là file aci database với các chiều của các điểm cách nhau bởi dấu phẩy `,`"
                             + " hoặc dấu khoảng trắng ` `.");
                 }
-            }    
-            
+            }
+
         }
 
         private void RadioButton_Checked_SelectAlgorithms(object sender, RoutedEventArgs e)
@@ -82,13 +71,13 @@ namespace ProjectOneHUST
                 //FCM-------------------------------------------------------------
                 //----------------------------------------------------------------
                 MC_FCM.CGMode cGMode = MC_FCM.CGMode.StupidRandom;
-                if(ClusterGenOptions_FCM.SelectedIndex == 1)
+                if (ClusterGenOptions_FCM.SelectedIndex == 1)
                 {
                     cGMode = MC_FCM.CGMode.MaxFuzzificationCoefficientGroups;
                 }
                 thread = new Thread(new ParameterizedThreadStart(a =>
                 {
-                    lock(this.aCIDb)
+                    lock (this.aCIDb)
                     {
                         var data = this.aCIDb;
                         var fcm = new FCM(data.X, data.C, 2);
@@ -99,7 +88,7 @@ namespace ProjectOneHUST
                             CycleTxt.Text = fcm.Result.l.ToString();
                         }));
                         StringBuilder sbClustersTxt = new StringBuilder();
-                        for(var i = 0; i < fcm.Result.V.Count; i++)
+                        for (var i = 0; i < fcm.Result.V.Count; i++)
                         {
                             if (i != 0)
                                 sbClustersTxt.AppendLine();
@@ -108,7 +97,7 @@ namespace ProjectOneHUST
                             {
                                 sbClustersTxt.Append(vi.ToString("N6") + ", ");
                             }
-                            if(cluster.Length > 0)
+                            if (cluster.Length > 0)
                             {
                                 sbClustersTxt.Remove(sbClustersTxt.Length - 2, 2);
                             }
@@ -157,9 +146,9 @@ namespace ProjectOneHUST
                                 Name = "Jaccard",
                                 Index = fcm_jaccard
                             });
-                        })); 
-                        
-                        
+                        }));
+
+
                         btn.Dispatcher.Invoke(new Action(() =>
                         {
                             ButtonProgressAssist.SetIsIndicatorVisible(btn, false);
@@ -169,7 +158,7 @@ namespace ProjectOneHUST
                         {
                             LoadingBar.Visibility = Visibility.Hidden;
                         }));
-                        
+
                         Overview_Panel.Dispatcher.Invoke(new Action(() =>
                         {
                             Overview_Panel.Visibility = Visibility.Collapsed;
@@ -180,7 +169,8 @@ namespace ProjectOneHUST
                         }));
                     }
                 }));
-            } else if (algorithm == 1)
+            }
+            else if (algorithm == 1)
             {
                 //MC_FCM-------------------------------------------------------------
                 //----------------------------------------------------------------
@@ -284,11 +274,11 @@ namespace ProjectOneHUST
                     }
                 }));
             }
-            else if(algorithm == 2)
+            else if (algorithm == 2)
             {
                 //sSMC_FCM-------------------------------------------------------------
                 //----------------------------------------------------------------
-                int percent = (int) checked(SupervisionDegreeInput_sSMC.Value);
+                int percent = (int)checked(SupervisionDegreeInput_sSMC.Value);
                 int x = aCIDb.expect.Count * percent / 100;
                 var gen = new SemiSupervisedGenerator(aCIDb.expect, x);
                 var semiSupervised = gen.semiSupervised;
@@ -386,7 +376,7 @@ namespace ProjectOneHUST
                     }
                 }));
             }
-            else if(algorithm == 3)
+            else if (algorithm == 3)
             {
                 //FC_sSMC_FCM-------------------------------------------------------------
                 //----------------------------------------------------------------
@@ -489,7 +479,7 @@ namespace ProjectOneHUST
                 }));
             }
 
-            if(thread != null)
+            if (thread != null)
             {
                 thread.Start();
             }

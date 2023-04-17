@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static ProjectOneClasses.MC_FCM;
 
 namespace ProjectOneClasses
@@ -15,7 +10,7 @@ namespace ProjectOneClasses
         private int C;
         private IReadOnlyDictionary<int, int> Y;
         private double epsilon, alpha;
-        public MC_sSMC_FCM([NotNull] IReadOnlyList<double[]> X, int C, 
+        public MC_sSMC_FCM([NotNull] IReadOnlyList<double[]> X, int C,
             [NotNull] IReadOnlyDictionary<int, int> Y,
             double alpha = 0.6, double epsilon = 0.0001)
         {
@@ -99,8 +94,8 @@ namespace ProjectOneClasses
             const double ml = 1.1, _mu = 4.1;
             //B0: Generate m + B1: Generate first clusters
             double[] m;
+            //GenerateFuzzificationCoefficientsAndFirstCClusters_ExpandPointsNearestCluster(X, Y, C, ml, _mu, epsilon, out m, out V);
             GenerateFuzzificationCoefficientsAndFirstCClusters_MaxFuzzificationCoefficientGroups(X, Y, C, ml, _mu, epsilon, out m, out V);
-
             double[] M2 = new double[n];
             Array.Copy(m, M2, m.Length);
 
@@ -144,6 +139,7 @@ namespace ProjectOneClasses
                 foreach (var y in Y)
                 {
                     int i = y.Key, k = y.Value;
+
                     sum_mu_i_j[i] = 0;
                     //Get d_min (2.11)
                     double dmin = D[i].Min();
@@ -168,13 +164,18 @@ namespace ProjectOneClasses
 
                 //Calculate M' (3.3)
 
+
                 foreach (var y in Y)
                 {
                     int i = y.Key, k = y.Value;
                     //Calculate M' (3.3)
-                    
+
                     if (l < 4)
+                    {
+                        //var aaaa = M2[i];
                         M2[i] = CalculateM2(Y, M2[i], alpha, U[i][k]);
+                        //var bbbb = M2[i];
+                    }    
                     double m2 = M2[i];
 
                     double aa = 1 / (m2 - 1), bb = (m2 - m[i]) / (m2 - 1);
@@ -233,6 +234,14 @@ namespace ProjectOneClasses
                     double delta = Math.Sqrt(GetSquareDistanse(V[k], V_last[k]));
                     if (delta >= epsilon) isConverging = false;
                 }
+                //if (l == 4)
+                //{
+
+                //}
+                //else if (l == 3)
+                //{
+
+                //}
                 if (isConverging) break;
             }
 
@@ -241,11 +250,10 @@ namespace ProjectOneClasses
         }
         public static double CalculateM2(IReadOnlyDictionary<int, int> Y, double M, double alpha, double Uik)
         {
-            double right_min = int.MaxValue;
             double right = M * Math.Pow((1 - alpha) / ((1 / Uik) - 1), M - 1);
             double M2 = Math.Max(M, -1 / Math.Log(alpha)); // Start value of M2
             double left = M2 * Math.Pow(alpha, M2 - 1);
-            while (left > right_min)
+            while (left > right)
             {
                 M2 *= 2;
                 left = M2 * Math.Pow(alpha, M2 - 1);
@@ -350,7 +358,7 @@ namespace ProjectOneClasses
             {
                 int[] V_count = new int[C];
                 int[] supervisedGroupIndexs = new int[C];
-                for(int k = 0; k < C; k++)
+                for (int k = 0; k < C; k++)
                 {
                     supervisedGroupIndexs[k] = n;
                 }
@@ -366,7 +374,7 @@ namespace ProjectOneClasses
                         zIndexs[i] = i;
                         V_count[k] = 1;
                         supervisedGroupIndexs[k] = i;
-                        maxGroupsV[i] = supervisedGroup; 
+                        maxGroupsV[i] = supervisedGroup;
                     }
                     else
                     {
@@ -378,12 +386,12 @@ namespace ProjectOneClasses
                             supervisedGroup[j] += X[i][j];
                         }
                     }
-                    
+
                 }
                 for (int k = 0; k < C; k++)
                 {
                     int i = supervisedGroupIndexs[k];
-                    if(i != n)
+                    if (i != n)
                     {
                         double[] supervisedGroup = maxGroupsV[i];
                         if (V_count[k] == 1)
@@ -442,6 +450,260 @@ namespace ProjectOneClasses
                 V[i] = maxGroupsV[xis[i]];
             }
         }
-        
+
+        public static void GenerateFuzzificationCoefficientsAndFirstCClusters_ExpandPointsNearestCluster(
+            IReadOnlyList<double[]> X, IReadOnlyDictionary<int, int> Y, int C, double ml, double mu, double epsilon, out double[] m, out double[][] V)
+        {
+            int n = X.Count;
+            int nn = n / C;
+            int nn_80percent = nn * 80 / 100;
+            int dimension = X[0].Length;
+            //Calculate density index of each point in X list
+            double[] delta2 = new double[n];
+            for (int i = 0; i < n; i++) delta2[i] = 0;
+            PriorityQueue<XPoint, double>[] priorityQueues = new PriorityQueue<XPoint, double>[n];
+            for (int i = 0; i < n; i++) priorityQueues[i] = new PriorityQueue<XPoint, double>(nn);
+            double pushToPriorityQueues(int i, int xi, double d)
+            {
+                double dd = d;
+                if (priorityQueues[i].Count < nn) priorityQueues[i].Enqueue(new XPoint(xi, d), -d);
+                else
+                {
+                    XPoint x_d_max = priorityQueues[i].EnqueueDequeue(new XPoint(xi, d), -d);
+                    dd -= x_d_max.d;
+                }
+                return dd;
+            }
+            //Calculate the distance between two point in X list
+            /*double[][] delta = new double[n - 1][];
+            double getDelta(int i, int j)
+            {
+                if (i == j) return double.PositiveInfinity;
+                if (i > j) return delta[j][i - j - 1];
+                return delta[i][j - i - 1];
+            }*/
+            for (int i = 0; i < n - 1; i++)
+            {
+                //delta[i] = new double[n - i - 1];
+                for (int j = i + 1; j < n; j++)
+                {
+                    var d = Math.Sqrt(GetSquareDistanse(X[i], X[j]));
+                    //delta[i][j] = d;
+                    delta2[i] += pushToPriorityQueues(i, j, d);
+                    delta2[j] += pushToPriorityQueues(j, i, d);
+                }
+            }
+
+            XPoint[] delta3 = new XPoint[n];
+            for (int i = 0; i < n; i++)
+            {
+                delta3[i].d = delta2[i];
+                delta3[i].i = i;
+            }
+            Array.Sort(delta3, (a, b) =>
+            {
+                return b.d.CompareTo(a.d);
+            });
+
+            //Calculate power number of function (alpha)
+            double delta2_min = delta3[n - 1].d, delta2_max_min = delta3[0].d - delta2_min;
+            double median = GetMedian(delta2);
+            double alpha = Math.Log(0.5, (median - delta2_min) / delta2_max_min);
+            //Calculate fuzzification coefficients
+            m = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                m[i] = ml + (mu - ml) * Math.Pow((delta2[i] - delta2_min) / delta2_max_min, alpha);
+            }
+
+            //Generate d
+            List<int> xis = new List<int>(C);
+            int[] zIndexs = new int[n];
+            for (int i = 0; i < n; i++) zIndexs[i] = n;
+            double[][] maxGroupsV = new double[n][];
+            int maxGroupSize;
+            xis.Clear();
+
+            //create cluster for Supervised point
+            {
+                int[] V_count = new int[C];
+                int[] supervisedGroupIndexs = new int[C];
+                for (int k = 0; k < C; k++)
+                {
+                    supervisedGroupIndexs[k] = n;
+                }
+                foreach (var y in Y)
+                {
+                    int i = y.Key, k = y.Value;
+                    double[] supervisedGroup;
+                    if (supervisedGroupIndexs[k] == n)
+                    {
+                        supervisedGroup = new double[dimension];
+                        Array.Copy(X[i], supervisedGroup, dimension);
+                        xis.Add(i);
+                        zIndexs[i] = i;
+                        V_count[k] = 1;
+                        supervisedGroupIndexs[k] = i;
+                        maxGroupsV[i] = supervisedGroup;
+                    }
+                    else
+                    {
+                        supervisedGroup = maxGroupsV[supervisedGroupIndexs[k]];
+                        zIndexs[i] = supervisedGroupIndexs[k];
+                        V_count[k]++;
+                        for (int j = 0; j < dimension; j++)
+                        {
+                            supervisedGroup[j] += X[i][j];
+                        }
+                    }
+
+                }
+
+                PriorityQueue<XPoint, double>[] nearestClusters = new PriorityQueue<XPoint, double>[C];//Not optimized memory
+                void pushToNearestCluster(int i, int xi, double d)
+                {
+                    //double dd = d;
+                    if (nearestClusters[i].Count < nn_80percent) priorityQueues[i].Enqueue(new XPoint(xi, d), -d);
+                    else
+                    {
+                        XPoint x_d_max = nearestClusters[i].EnqueueDequeue(new XPoint(xi, d), -d);
+                        //dd -= x_d_max.d;
+                    }
+                    //return dd;
+                }
+
+                for (int k = 0; k < C; k++)
+                {
+                    int i = supervisedGroupIndexs[k];
+                    if (i != n)
+                    {
+                        double[] supervisedGroup = maxGroupsV[i];
+                        if (V_count[k] > 1)
+                        {
+                            for (int j = 0; j < dimension; j++)
+                            {
+                                supervisedGroup[j] /= V_count[k];
+                            }
+                            
+                        }
+                        //else //if (V_count[k] == 1)
+                        //{
+                        //    for (int j = 0; j < dimension; j++)
+                        //    {
+                        //        supervisedGroup[j] += 2 * epsilon;
+                        //    }
+                        //}
+                        if (V_count[k] < nn_80percent)
+                            nearestClusters[k] = new PriorityQueue<XPoint, double>();
+                    }
+                }
+
+                foreach (var y in Y)
+                {
+                    int i = y.Key, k = y.Value;
+                    int zIdx = zIndexs[i];
+                    double[] supervisedGroup = maxGroupsV[zIdx];
+
+                    if (V_count[k] < nn_80percent)
+                        pushToNearestCluster(k, i, GetSquareDistanse(supervisedGroup, X[i]));
+
+                }
+
+                for (int k = 0; k < C; k++)
+                {
+                    int i = supervisedGroupIndexs[k];
+                    if (i != n)
+                    {
+                        double[] supervisedGroup = maxGroupsV[i];
+                        if (V_count[k] < nn_80percent)
+                        {
+                            if (V_count[k] > 1)
+                            {
+                                for (int j = 0; j < dimension; j++)
+                                {
+                                    supervisedGroup[j] *= V_count[k];
+                                }
+                            }
+                            Stack<int> nearests = new Stack<int>();
+                            while (nearestClusters[k].TryDequeue(out var p, out _))
+                            {
+                                nearests.Push(p.i);
+                            }
+                            while (V_count[k] < nn_80percent && nearests.TryPop(out var nearest))
+                            {
+                                while (priorityQueues[nearest].TryDequeue(out var p, out _))
+                                {
+                                    if (zIndexs[p.i] != n) continue;
+                                    zIndexs[p.i] = i;
+                                    V_count[k]++;
+                                    for (int j = 0; j < dimension; ++j)
+                                    {
+                                        maxGroupsV[i][j] += X[p.i][j];
+                                    }
+
+                                }
+                            }
+
+                            if (V_count[k] > 1)
+                            {
+                                for (int j = 0; j < dimension; j++)
+                                {
+                                    supervisedGroup[j] /= V_count[k];
+                                }
+
+                            }
+                        }
+                           
+
+                        if (V_count[k] == 1)
+                        {
+                            for (int j = 0; j < dimension; j++)
+                            {
+                                supervisedGroup[j] += 2 * epsilon;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            //create cluster for non-Supervised point
+            for (int i = n - 1; i > -1 && xis.Count < C; i--)
+            {
+                int xi = delta3[i].i;
+                if (zIndexs[xi] != n) continue;
+                xis.Add(xi);
+                maxGroupSize = 1;
+                zIndexs[xi] = xi;
+                maxGroupsV[xi] = new double[dimension];
+                Array.Copy(X[xi], maxGroupsV[xi], dimension);
+                XPoint p;
+                while (priorityQueues[xi].TryDequeue(out p, out _))
+                {
+                    if (zIndexs[p.i] != n) continue;
+                    zIndexs[p.i] = xi;
+                    maxGroupSize++;
+                    for (int j = 0; j < dimension; ++j)
+                    {
+                        maxGroupsV[xi][j] += X[p.i][j];
+                    }
+
+                }
+                if (maxGroupSize == 1)
+                {
+                    maxGroupsV[xi][0] += epsilon;
+                }
+                else
+                    for (int j = 0; j < dimension; ++j)
+                    {
+                        maxGroupsV[xi][j] /= maxGroupSize;
+                    }
+            }
+            V = new double[C][];
+            for (int i = 0; i < C; ++i)
+            {
+                V[i] = maxGroupsV[xis[i]];
+            }
+        }
     }
 }

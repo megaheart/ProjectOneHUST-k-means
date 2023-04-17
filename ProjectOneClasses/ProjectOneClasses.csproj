@@ -7,167 +7,39 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="DataSet\bezdekIris.data" />
-    <None Remove="DataSet\bezdekIris.data.p10.ss" />
-    <None Remove="DataSet\bezdekIris.data.p15.ss" />
-    <None Remove="DataSet\bezdekIris.data.p20.ss" />
-    <None Remove="DataSet\bezdekIris.data.p5.ss" />
-    <None Remove="DataSet\column_2C.dat" />
-    <None Remove="DataSet\column_2C.dat.p10.ss" />
-    <None Remove="DataSet\column_2C.dat.p15.ss" />
-    <None Remove="DataSet\column_2C.dat.p20.ss" />
-    <None Remove="DataSet\column_2C.dat.p5.ss" />
-    <None Remove="DataSet\column_3C.dat" />
-    <None Remove="DataSet\column_3C.dat.p10.ss" />
-    <None Remove="DataSet\column_3C.dat.p15.ss" />
-    <None Remove="DataSet\column_3C.dat.p20.ss" />
-    <None Remove="DataSet\column_3C.dat.p5.ss" />
-    <None Remove="DataSet\glass.data" />
-    <None Remove="DataSet\glass.data.p10.ss" />
-    <None Remove="DataSet\glass.data.p15.ss" />
-    <None Remove="DataSet\glass.data.p20.ss" />
-    <None Remove="DataSet\glass.data.p5.ss" />
-    <None Remove="DataSet\heart.dat" />
-    <None Remove="DataSet\heart.dat.p10.ss" />
-    <None Remove="DataSet\heart.dat.p15.ss" />
-    <None Remove="DataSet\heart.dat.p20.ss" />
-    <None Remove="DataSet\heart.dat.p5.ss" />
-    <None Remove="DataSet\iris.data" />
-    <None Remove="DataSet\iris.data.p10.ss" />
-    <None Remove="DataSet\iris.data.p15.ss" />
-    <None Remove="DataSet\iris.data.p20.ss" />
-    <None Remove="DataSet\iris.data.p5.ss" />
-    <None Remove="DataSet\iris2.data" />
-    <None Remove="DataSet\iris2.data.p10.ss" />
-    <None Remove="DataSet\iris2.data.p15.ss" />
-    <None Remove="DataSet\iris2.data.p20.ss" />
-    <None Remove="DataSet\iris2.data.p5.ss" />
-    <None Remove="DataSet\wine.data" />
-    <None Remove="DataSet\wine.data.p10.ss" />
-    <None Remove="DataSet\wine.data.p15.ss" />
-    <None Remove="DataSet\wine.data.p20.ss" />
-    <None Remove="DataSet\wine.data.p5.ss" />
+    <None Remove="DataSet\bezdekIris.data" />
+    <None Remove="DataSet\column_2C.dat" />
+    <None Remove="DataSet\column_3C.dat" />
+    <None Remove="DataSet\glass.data" />
+    <None Remove="DataSet\heart.dat" />
+    <None Remove="DataSet\iris.data" />
+    <None Remove="DataSet\iris2.data" />
+    <None Remove="DataSet\wine.data" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="DataSet\bezdekIris.data">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="DataSet\bezdekIris.data.p10.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\bezdekIris.data.p15.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\bezdekIris.data.p20.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\bezdekIris.data.p5.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="DataSet\column_2C.dat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\column_2C.dat.p10.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\column_2C.dat.p15.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\column_2C.dat.p20.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\column_2C.dat.p5.ss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DataSet\column_3C.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="DataSet\column_3C.dat.p10.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\column_3C.dat.p15.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\column_3C.dat.p20.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\column_3C.dat.p5.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="DataSet\glass.data">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\glass.data.p10.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\glass.data.p15.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\glass.data.p20.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\glass.data.p5.ss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DataSet\heart.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="DataSet\heart.dat.p10.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\heart.dat.p15.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\heart.dat.p20.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\heart.dat.p5.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="DataSet\iris.data">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\iris.data.p10.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\iris.data.p15.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\iris.data.p20.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\iris.data.p5.ss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DataSet\iris2.data">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="DataSet\iris2.data.p10.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\iris2.data.p15.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\iris2.data.p20.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\iris2.data.p5.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="DataSet\wine.data">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\wine.data.p10.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\wine.data.p15.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\wine.data.p20.ss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DataSet\wine.data.p5.ss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

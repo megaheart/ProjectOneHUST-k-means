@@ -15,7 +15,7 @@ namespace ProjectOneClasses.Utilities
         public int C { get; private set; }
         public IReadOnlyList<int> expect { get; private set; }
         public bool IsNormalized { get; private set; }
-        public ACIDbDeserializer(string path, char? delimiter = null, bool isNormalized = false)
+        public ACIDbDeserializer(string path, char? delimiter = null)
         {
             string[] lines = File.ReadAllLines(path);
             
@@ -69,23 +69,39 @@ namespace ProjectOneClasses.Utilities
             C = NameToIndex.Count;
 
             //Normalize
-            if (isNormalized)
+            ScaleMinMax();
+        }
+
+        public void ScaleMinMax(/*double min = 0, double max = 1*/)
+        {
+            int dimension = X[0].Length;
+            double[] maxVal = new double[dimension];
+            double[] minVal = new double[dimension];
+            double[] maxMin = new double[dimension];
+
+            Array.Copy(X[0], maxVal, dimension);
+            Array.Copy(X[0], minVal, dimension);
+
+            for (int i = 1; i < X.Count; i++)
             {
-                int dimension = X[0].Length;
-                double[] max = new double[dimension];
-                for (int i = 1; i < X.Count; i++)
+                for (int j = 0; j < dimension; j++)
                 {
-                    for (int j = 1; j < dimension; j++)
-                    {
-                        max[j] = Math.Max(max[j], X[i][j]);
-                    }
+                    maxVal[j] = Math.Max(maxVal[j], X[i][j]);
+                    minVal[j] = Math.Min(minVal[j], X[i][j]);
                 }
-                for (int i = 1; i < X.Count; i++)
+            }
+
+            for (int j = 0; j < dimension; j++)
+            {
+                maxMin[j] = maxVal[j] - minVal[j];
+                if (maxMin[j] == 0) maxMin[j] = 1;
+            }
+
+            for (int i = 0; i < X.Count; i++)
+            {
+                for (int j = 0; j < dimension; j++)
                 {
-                    for (int j = 1; j < dimension; j++)
-                    {
-                        X[i][j] /= max[j];
-                    }
+                    X[i][j] = (X[i][j] - minVal[j]) / maxMin[j];
                 }
             }
         }

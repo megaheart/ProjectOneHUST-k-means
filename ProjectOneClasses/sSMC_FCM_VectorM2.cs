@@ -1,17 +1,22 @@
-﻿using System.Collections.Immutable;
+﻿using ProjectOneClasses.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using ProjectOneClasses.Utilities;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ProjectOneClasses
 {
-    public class sSMC_FCM
+    public class sSMC_FCM_VectorM2
     {
         private double M, alpha;
         private IReadOnlyList<double[]> X;
         private int C;
         private IReadOnlyDictionary<int, int> Y;
         private double epsilon;
-        public sSMC_FCM([NotNull] IReadOnlyList<double[]> X, int C, IReadOnlyDictionary<int, int> Y,
+        public sSMC_FCM_VectorM2([NotNull] IReadOnlyList<double[]> X, int C, IReadOnlyDictionary<int, int> Y,
             double M = 2, double alpha = 0.6, double epsilon = 0.0001)
         {
             if (C < 1) throw new Exception("C must be more than 0");
@@ -23,7 +28,7 @@ namespace ProjectOneClasses
             this.alpha = alpha;
             this.Y = Y.ToImmutableDictionary();
         }
-        public class sSMC_FCM_Result : IFCM_Result
+        public class sSMC_FCM_VectorM2_Result : IFCM_Result
         {
             public IReadOnlyList<double[]> V { get; private set; }
             public IReadOnlyList<IReadOnlyList<double>> U { get; private set; }
@@ -31,9 +36,9 @@ namespace ProjectOneClasses
 
             public double M { get; private set; }
 
-            public double M2 { get; private set; }
+            public double[] M2 { get; private set; }
 
-            public sSMC_FCM_Result([NotNull] double[][] _V, [NotNull] double[][] _U, int l, double M, double M2)
+            public sSMC_FCM_VectorM2_Result([NotNull] double[][] _V, [NotNull] double[][] _U, int l, double M, double[] M2)
             {
                 this.V = _V;
                 this.U = _U;
@@ -69,7 +74,7 @@ namespace ProjectOneClasses
                 }
             }
         }
-        public sSMC_FCM_Result Result { get; private set; } = null;
+        public sSMC_FCM_VectorM2_Result Result { get; private set; } = null;
         public void _solve()
         {
             //Initialize input parameter
@@ -97,7 +102,7 @@ namespace ProjectOneClasses
                 D[i] = new double[C];
                 mu[i] = new double[C];
             }
-            double M2 = M;
+            double[] M2 = null;
             //B1: Generate first clusters
             V = _GenerateFirstCClusters(X, Y, C, epsilon);
             //var fcm = new MC_FCM(X, C);
@@ -169,11 +174,10 @@ namespace ProjectOneClasses
                 //Calculate M' (3.3)
                 if (l < 2)
                 {
-                    //M2 = 4;
-                    M2 = Math.Min(CalculateM2(Y/*, n, C*/, M, alpha, U), 8);
-                    //M2 = CalculateM2(Y/*, n, C*/, M, alpha, U);
-                }    
-                double aa = 1 / (M2 - 1), bb = (M2 - M) / (M2 - 1);
+                    //M2 = 3;
+                    M2 = CalculateM2(Y/*, n, C*/, M, alpha, U);
+                }
+                
 
                 foreach (var y in Y)
                 {
@@ -218,7 +222,8 @@ namespace ProjectOneClasses
                     }
 
                     //Calculate mu(i, k) (2.13)
-                    double right = Math.Pow(Math.Pow(D[i][k], 2) * M2, -aa);
+                    double aa = 1 / (M2[i] - 1), bb = (M2[i] - M) / (M2[i] - 1);
+                    double right = Math.Pow(Math.Pow(D[i][k], 2) * M2[i], -aa);
                     double c = sum_mu_i_j;
                     Func<double, double> func1 = x => (x / Math.Pow(x + c, bb)) - right;
                     var solver = new SimpleOneVariableEquationSolver(func1, epsilon);
@@ -248,7 +253,7 @@ namespace ProjectOneClasses
                     {
                         //Calculate m(i, k) (2.8)
                         if (Y.TryGetValue(i, out s_k) && s_k == k)
-                            _m = Math.Pow(U[i][k], M2);
+                            _m = Math.Pow(U[i][k], M2[i]);
                         else
                             _m = Math.Pow(U[i][k], M);
 
@@ -275,17 +280,23 @@ namespace ProjectOneClasses
                 if (isConverging) break;
             }
 
-            Result = new sSMC_FCM_Result(V, U, l, M, M2);
+            Result = new sSMC_FCM_VectorM2_Result(V, U, l, M, M2);
 
 
 
 
         }
-        public static double CalculateM2(IReadOnlyDictionary<int, int> Y/*, int n, int C*/, double M, double alpha, double[][] U)
+        public static double[] CalculateM2(IReadOnlyDictionary<int, int> Y/*, int n, int C*/, double M, double alpha, double[][] U)
         {
-            double u_min = 2;
-            if(Y.Count > 0) { u_min = Y.Select(p => U[p.Key][p.Value]).Min(); }
-            return M2_PrecalculationTable.Instance[u_min];
+            double[] M2 = new double[U.Length];
+
+            foreach (var y in Y)
+            {
+                int i = y.Key, k = y.Value;
+                M2[i] = Math.Min(M2_PrecalculationTable.Instance[U[i][k]], 8);
+            }
+
+            return M2;
         }
         public static double GetSquareDistanse(double[] x1, double[] x2)
         {
@@ -300,7 +311,7 @@ namespace ProjectOneClasses
         public double[][] _GenerateFirstCClusters(IReadOnlyList<double[]> X, IReadOnlyDictionary<int, int> Y, int C, double epsilon)
         {
             return ClustersGenerator.sSMC_FCM_KMeanPlusPlus(X, Y, C, epsilon);
-           
+
         }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using ProjectOneClasses.Utilities;
 
 namespace ProjectOneClasses
 {
+    public delegate double[][] MC_FCM_InitializeCluster(IReadOnlyList<double[]> X, int C, double[] m, double epsilon);
     public class MC_FCM
     {
         public bool IsCompleted { get; private set; }
@@ -16,11 +18,16 @@ namespace ProjectOneClasses
             public IReadOnlyList<double[]> V { get; private set; }
             public IReadOnlyList<IReadOnlyList<double>> U { get; private set; }
             public int l { get; private set; }
+            //public double M { get; private set; }
+
+            //public double M2 { get; private set; }
             public MC_FCM_Result([NotNull] double[][] _V, [NotNull] double[][] _U, int l)
             {
                 this.V = _V;
                 this.U = _U;
                 this.l = l;
+                //this.M = M;
+                //this.M2 = M2;
             }
             public void printToConsole()
             {
@@ -117,15 +124,35 @@ namespace ProjectOneClasses
                 {
                     double[] delta = new double[C];
                     double a = 1 / (m[i] - 1), b, c = 0;
+
+                    int hasZeroDis = -1;
+
                     for (int k = 0; k < C; k++)
                     {
-                        b = Math.Pow(GetSquareDistanse(X[i], V[k]), a);
+                        double d = GetSquareDistanse(X[i], V[k]);
+                        if (d == 0)
+                        {
+                            hasZeroDis = k;
+                            break;
+                        }
+                        b = Math.Pow(d, a);
                         delta[k] = b;
                         c += 1 / b;
                     }
-                    for (int k = 0; k < C; k++)
+                    if (hasZeroDis == -1)
                     {
-                        U[i][k] = 1 / (delta[k] * c);
+                        for (int k = 0; k < C; k++)
+                        {
+                            U[i][k] = 1 / (delta[k] * c); //(2.10)
+                        }
+                    }
+                    else
+                    {
+                        for (int k = 0; k < C; k++)
+                        {
+                            U[i][k] = 0;
+                        }
+                        U[i][hasZeroDis] = 1;
                     }
                 }
                 //B3: Update V
@@ -386,6 +413,7 @@ namespace ProjectOneClasses
         }
         public enum CGMode
         {
+            KMeanPlusPlus,
             MaxFuzzificationCoefficients,
             MinFuzzificationCoefficients,
             ChooseCFromXClustersRandomly,
@@ -393,26 +421,32 @@ namespace ProjectOneClasses
             StupidRamdomWithPartition,
             AverageInPartition,
             //Choose max fuzzification coefficients groups
-            MaxFuzzificationCoefficientGroups
+            MaxFuzzificationCoefficientGroups,
+            Custom
         }
         public CGMode ClustersGenerationMode { get; set; } = CGMode.MaxFuzzificationCoefficients;
+        public MC_FCM_InitializeCluster InitializeCluster = null;
         public double[][] _GenerateFirstCClusters(IReadOnlyList<double[]> X, int C, double[] m, double epsilon)
         {
             switch (ClustersGenerationMode)
             {
+                case CGMode.KMeanPlusPlus:
+                    return ClustersGenerator.KMeanPlusPlus(X, C, epsilon);
                 case CGMode.AverageInPartition:
-                    return _GenerateFirstCClusters_AverageInPartition(X, C, epsilon);
+                    return ClustersGenerator.AverageInPartition(X, C, epsilon);
 
                 case CGMode.ChooseCFromXClustersRandomly:
-                    return _GenerateFirstCClusters_ChooseCFromXClustersRandomly(X, C, epsilon);
+                    return ClustersGenerator.ChooseCFromXClustersRandomly(X, C, epsilon);
 
                 case CGMode.StupidRandom:
-                    return _GenerateFirstCClusters_StupidRandom(X, C, epsilon);
+                    return ClustersGenerator.StupidRandom(X, C, epsilon);
 
                 case CGMode.StupidRamdomWithPartition:
-                    return _GenerateFirstCClusters_StupidRamdomWithPartition(X, C, epsilon);
+                    return ClustersGenerator.StupidRamdomWithPartition(X, C, epsilon);
                 case CGMode.MinFuzzificationCoefficients:
                     return _GenerateFirstCClusters_MinFuzzificationCoefficients(X, C, m, epsilon);
+                case CGMode.Custom:
+                    return InitializeCluster(X, C, m, epsilon);
                 default:
                     return _GenerateFirstCClusters_MaxFuzzificationCoefficients(X, C, m, epsilon);
 
@@ -461,157 +495,6 @@ namespace ProjectOneClasses
                 Array.Copy(_x1, 0, _x2, 0, l);
                 _x2[0] += epsilon;
                 V[i] = _x2;
-            }
-            return V;
-        }
-        public static double[][] _GenerateFirstCClusters_ChooseCFromXClustersRandomly(IReadOnlyList<double[]> X, int C, double epsilon)
-        {
-
-            bool[] isMatch = new bool[X.Count];
-            double[][] V = new double[C][];
-            double[] _x1;//, _x2;
-            int l = X[0].Length, ii;
-            Random r = new Random();
-            for (int i = 0; i < C; i++)
-            {
-                _x1 = new double[l];
-                ii = r.Next(0, X.Count - i);
-                int j = 0;
-                while (ii > -1)
-                {
-                    if (isMatch[j] == false)
-                    {
-                        if (ii == 0)
-                        {
-                            isMatch[j] = true;
-                            Array.Copy(X[j], 0, _x1, 0, l);
-                            _x1[0] += epsilon;
-                            V[i] = _x1;
-                            break;
-                        }
-                        ii--;
-                    }
-                    j++;
-                }
-            }
-            return V;
-        }
-        public static double[][] _GenerateFirstCClusters_StupidRandom(IReadOnlyList<double[]> X, int C, double epsilon)
-        {
-            Random r = new Random();
-            int dimension = X[0].Length;
-            double[][] V = new double[C][];
-            double[] min = new double[dimension];
-            double[] max = new double[dimension];
-            for (int j = 0; j < dimension; j++)
-            {
-                min[j] = int.MaxValue;
-                max[j] = int.MinValue;
-            }
-            for (int i = 0; i < X.Count; i++)
-            {
-                for (int j = 0; j < dimension; j++)
-                {
-                    if (min[j] > X[i][j]) min[j] = X[i][j];
-                    if (max[j] < X[i][j]) max[j] = X[i][j];
-                }
-            }
-            for (int k = 0; k < C; k++)
-            {
-                V[k] = new double[dimension];
-                for (int j = 0; j < dimension; j++) V[k][j] = min[j] + (max[j] - min[j]) * r.NextDouble();
-            }
-            return V;
-        }
-        public static double[][] _GenerateFirstCClusters_StupidRamdomWithPartition(IReadOnlyList<double[]> X, int C, double epsilon)
-        {
-            Random r = new Random();
-            int dimension = X[0].Length, partitionCount = X.Count / C, p = 0, to;
-            double[][] V = new double[C][];
-            double[] min = new double[dimension];
-            double[] max = new double[dimension];
-
-            for (int k = 1; k < C; k++)
-            {
-                for (int j = 0; j < dimension; j++)
-                {
-                    min[j] = int.MaxValue;
-                    max[j] = int.MinValue;
-                }
-                to = (p + 1) * partitionCount;
-                for (int i = p * partitionCount; i < to; i++)
-                {
-                    for (int j = 0; j < dimension; j++)
-                    {
-                        if (min[j] > X[i][j]) min[j] = X[i][j];
-                        if (max[j] < X[i][j]) max[j] = X[i][j];
-                    }
-                }
-                V[k] = new double[dimension];
-                for (int j = 0; j < dimension; j++) V[k][j] = min[j] + (max[j] - min[j]) * r.NextDouble();
-                ++p;
-            }
-            {
-                int k = 0;
-                for (int j = 0; j < dimension; j++)
-                {
-                    min[j] = int.MaxValue;
-                    max[j] = int.MinValue;
-                }
-                for (int i = p * partitionCount; i < X.Count; i++)
-                {
-                    for (int j = 0; j < dimension; j++)
-                    {
-                        if (min[j] > X[i][j]) min[j] = X[i][j];
-                        if (max[j] < X[i][j]) max[j] = X[i][j];
-                    }
-                }
-                V[k] = new double[dimension];
-                for (int j = 0; j < dimension; j++) V[k][j] = min[j] + (max[j] - min[j]) * r.NextDouble();
-            }
-            return V;
-        }
-        public static double[][] _GenerateFirstCClusters_AverageInPartition(IReadOnlyList<double[]> X, int C, double epsilon)
-        {
-            Random r = new Random();
-            int dimension = X[0].Length, partitionCount = X.Count / C, p = 0, to;
-            double[][] V = new double[C][];
-
-            for (int k = 1; k < C; k++)
-            {
-                V[k] = new double[dimension];
-                for (int j = 0; j < dimension; j++)
-                {
-                    V[k][j] = 0;
-                }
-                to = (p + 1) * partitionCount;
-                for (int i = p * partitionCount; i < to; i++)
-                {
-                    for (int j = 0; j < dimension; j++)
-                    {
-                        V[k][j] += X[i][j];
-                    }
-                }
-                for (int j = 0; j < dimension; j++) V[k][j] /= partitionCount;
-                ++p;
-            }
-            {
-                int k = 0;
-                V[k] = new double[dimension];
-                for (int j = 0; j < dimension; j++)
-                {
-                    V[k][j] = 0;
-                }
-                for (int i = p * partitionCount; i < X.Count; i++)
-                {
-                    for (int j = 0; j < dimension; j++)
-                    {
-                        V[k][j] += X[i][j];
-                    }
-                }
-                partitionCount = X.Count - p * partitionCount;
-                for (int j = 0; j < dimension; j++) V[k][j] /= partitionCount;
-
             }
             return V;
         }

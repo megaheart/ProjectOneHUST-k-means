@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectOneClasses
+namespace ProjectOneClasses.Utilities
 {
     public static class FindMedian
     {
@@ -38,7 +38,7 @@ namespace ProjectOneClasses
         /// </summary>
         public static T NthOrderStatistic<T>(this IList<T> list, int n, Random rnd = null) where T : IComparable<T>
         {
-            return NthOrderStatistic(list, n, 0, list.Count - 1, rnd);
+            return list.NthOrderStatistic(n, 0, list.Count - 1, rnd);
         }
         private static T NthOrderStatistic<T>(this IList<T> list, int n, int start, int end, Random rnd) where T : IComparable<T>
         {

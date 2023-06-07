@@ -13,6 +13,7 @@ namespace ProjectOneClasses.Utilities
         public IReadOnlyList<double[]> V { get => _V; }
 
         public IReadOnlyList<IReadOnlyList<double>> U { get => _U; }
+        public int l { get => Random.Shared.Next(1, 200); }
         public FakeFCM_Result(IReadOnlyList<double[]> X, IReadOnlyList<int> expect, int C)
         {
             int dimension = X[0].Length;

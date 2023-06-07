@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectOneClasses
+namespace ProjectOneClasses.Utilities
 {
     public class SimpleOneVariableEquationSolver
     {
         private Func<double, double> function;
-        
+
         private double start;
         private double end;
         private double epsilon_X;
@@ -33,8 +33,8 @@ namespace ProjectOneClasses
             if (epsilon_X <= 0 /*|| epsilon_Y <= 0*/) throw new Exception("epsilon can't less than or equal 0.");
             this.epsilon_X = epsilon_X;
             //this.epsilon_Y = epsilon_Y;
-            this.start = double.MinValue;
-            this.end = double.MaxValue;
+            start = double.MinValue;
+            end = double.MaxValue;
         }
         public void Solve()
         {
@@ -43,7 +43,7 @@ namespace ProjectOneClasses
             double mid, lf, rf, mf;
             lf = function(l);
             rf = function(r);
-            while(double.IsNaN(lf))
+            while (double.IsNaN(lf))
             {
                 l /= 2;
                 lf = function(l);
@@ -58,9 +58,9 @@ namespace ProjectOneClasses
                 root = double.NaN;
                 return;
             }
-            else if(lf * rf == 0)
+            else if (lf * rf == 0)
             {
-                if(Math.Abs(lf) <= double.Epsilon)
+                if (Math.Abs(lf) <= double.Epsilon)
                 {
                     root = l;
                     return;
@@ -91,7 +91,7 @@ namespace ProjectOneClasses
                 {
                     l = mid;
                 }
-                else if(mf * rf > 0)
+                else if (mf * rf > 0)
                 {
                     r = mid;
                 }

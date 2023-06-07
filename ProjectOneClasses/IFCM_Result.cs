@@ -10,5 +10,8 @@ namespace ProjectOneClasses
     {
         public IReadOnlyList<double[]> V { get; }
         public IReadOnlyList<IReadOnlyList<double>> U { get; }
+        public int l { get; }
+        //public double M { get; }
+        //public double M2 { get; }
     }
 }

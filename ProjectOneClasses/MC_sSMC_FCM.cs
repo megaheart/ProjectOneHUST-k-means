@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using ProjectOneClasses.Utilities;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using static ProjectOneClasses.MC_FCM;
 
@@ -27,11 +28,16 @@ namespace ProjectOneClasses
             public IReadOnlyList<double[]> V { get; private set; }
             public IReadOnlyList<IReadOnlyList<double>> U { get; private set; }
             public int l { get; private set; }
+            //public double M { get; private set; }
+
+            //public double M2 { get; private set; }
             public MC_sSMC_FCM_Result([NotNull] double[][] _V, [NotNull] double[][] _U, int l)
             {
                 this.V = _V;
                 this.U = _U;
                 this.l = l;
+                //this.M = M;
+                //this.M2 = M2;
             }
             public void printToConsole()
             {
@@ -111,27 +117,53 @@ namespace ProjectOneClasses
                 {
                     double[] delta = new double[C];
                     double a = 1 / (m[i] - 1), b, c = 0;
+
+                    int hasZeroDis = -1;
+
                     for (int k = 0; k < C; k++)
                     {
                         if (D[i] != null)
                         {
                             //Cache D[i][j] - distance between [with-supervision] point X[i] and cluster Y[k]
-                            b = GetSquareDistanse(X[i], V[k]);
-                            D[i][k] = Math.Sqrt(b);
-                            b = Math.Pow(b, a);
+                            double d = GetSquareDistanse(X[i], V[k]);
+                            if (d == 0)
+                            {
+                                hasZeroDis = k;
+                                break;
+                            }
+                            D[i][k] = Math.Sqrt(d);
+                            b = Math.Pow(d, a);
                         }
                         else
                         {
-                            b = Math.Pow(GetSquareDistanse(X[i], V[k]), a);
+                            double d = GetSquareDistanse(X[i], V[k]);
+                            if (d == 0)
+                            {
+                                hasZeroDis = k;
+                                break;
+                            }
+                            b = Math.Pow(d, a);
                         }
                         //Calculate D(i, k)^(2 * a)
                         delta[k] = b;
                         //Calculate sigma sum
                         c += 1 / b;
                     }
-                    for (int k = 0; k < C; k++)
+                    
+                    if(hasZeroDis == -1)
                     {
-                        U[i][k] = 1 / (delta[k] * c); //(2.10)
+                        for (int k = 0; k < C; k++)
+                        {
+                            U[i][k] = 1 / (delta[k] * c); //(2.10)
+                        }
+                    }
+                    else
+                    {
+                        for (int k = 0; k < C; k++)
+                        {
+                            U[i][k] = 0;
+                        }
+                        U[i][hasZeroDis] = 1;
                     }
                 }
                 //--- with supervision at k th cluster
@@ -170,10 +202,10 @@ namespace ProjectOneClasses
                     int i = y.Key, k = y.Value;
                     //Calculate M' (3.3)
 
-                    if (l < 4)
+                    if (l < 2)
                     {
                         //var aaaa = M2[i];
-                        M2[i] = CalculateM2(Y, M2[i], alpha, U[i][k]);
+                        M2[i] = CalculateM2(Y, m[i], alpha, U[i][k]);
                         //var bbbb = M2[i];
                     }    
                     double m2 = M2[i];
@@ -255,7 +287,7 @@ namespace ProjectOneClasses
             double left = M2 * Math.Pow(alpha, M2 - 1);
             while (left > right)
             {
-                M2 *= 2;
+                M2 += 1;
                 left = M2 * Math.Pow(alpha, M2 - 1);
             }
             return M2;

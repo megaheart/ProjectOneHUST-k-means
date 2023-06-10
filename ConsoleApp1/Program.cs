@@ -9,7 +9,8 @@ using System.Data;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.IO;
-
+using ProjectOneClasses.ResultTypes;
+using ConsoleApp1.Tests;
 
 public class Program
 {
@@ -324,12 +325,12 @@ public class Program
             var mc_fcm5 = new sSMC_FCM(data.X, data.C, dataInfo.semiSupervised100);
             mc_fcm5._solve();
 
-            var r = fcm.Result as sSMC_FCM.sSMC_FCM_Result;
-            var r2 = mc_fcm.Result as sSMC_FCM.sSMC_FCM_Result;
-            var r3 = mc_fcm2.Result as sSMC_FCM.sSMC_FCM_Result;
-            var r4 = mc_fcm3.Result as sSMC_FCM.sSMC_FCM_Result;
-            var r5 = mc_fcm4.Result as sSMC_FCM.sSMC_FCM_Result;
-            var r6 = mc_fcm5.Result as sSMC_FCM.sSMC_FCM_Result;
+            var r = fcm.Result as sSMC_FCM_Result;
+            var r2 = mc_fcm.Result as sSMC_FCM_Result;
+            var r3 = mc_fcm2.Result as sSMC_FCM_Result;
+            var r4 = mc_fcm3.Result as sSMC_FCM_Result;
+            var r5 = mc_fcm4.Result as sSMC_FCM_Result;
+            var r6 = mc_fcm5.Result as sSMC_FCM_Result;
 
             pt.PrintRow(dataInfo.Name, $"{r.l} {r.M} {r.M2:F4}", $"{r2.l} {r2.M} {r2.M2:F4}", $"{r3.l} {r3.M} {r3.M2:F4}", $"{r4.l} {r4.M} {r4.M2:F4}", $"{r5.l} {r5.M} {r5.M2:F4}", $"{r6.l} {r6.M} {r6.M2:F4}");
 
@@ -1044,13 +1045,13 @@ public class Program
 
         //Data.CreateSemiSupervisonOfAllData();
         //Data.Create_BestMCFCM_SemiSupervisonOfAllData();
-        //MC_FCM_Tests.MC_FCM_DiffGenClusters_Benchmark();
+        MC_FCM_Tests.MC_FCM_DiffGenClusters_Benchmark();
         //MC_FCM_Tests.MC_SSMC_FCM_Benchmark();
         //MC_FCM_Tests.FCM_And_MC_FCM_BenchMark();
         //SSMC_FCM_Benchmark();
         //SSMC_FCM_VectorM2_Benchmark();
 
-        CustomBenchmark_1();
+        //CustomBenchmark_1();
 
         //ViewX();
 

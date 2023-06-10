@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ProjectOneClasses.ResultTypes;
 
 namespace ProjectOneClasses.ValidityCriterias.External
 {
@@ -11,37 +12,6 @@ namespace ProjectOneClasses.ValidityCriterias.External
     /// </summary>
     public class Accuracy
     {
-        public class _NotAsExpectPoint
-        {
-            public _NotAsExpectPoint(double[] point, int expectClusterIndex, int actualClusterIndex/*, int expectClusterName, int actualClusterName*/)
-            {
-                Point = point;
-                ExpectClusterIndex = expectClusterIndex;
-                ActualClusterIndex = actualClusterIndex;
-                //ExpectClusterName = expectClusterName;
-                //ActualClusterName = actualClusterName;
-            }
-
-            public double[] Point { get; private set; }
-            public int ExpectClusterIndex { get; private set; }
-            public int ActualClusterIndex { get; private set; }
-            //public int ExpectClusterName { get; private set; }
-            //public int ActualClusterName { get; private set; }
-        }
-        public class _Result
-        {
-            public _Result(int asExpect, int notAsExpect, IReadOnlyList<_NotAsExpectPoint> notAsExpectPoints)
-            {
-                AsExpect = asExpect;
-                NotAsExpect = notAsExpect;
-                NotAsExpectPoints = notAsExpectPoints;
-            }
-
-            public int AsExpect { get; private set; }
-            public int NotAsExpect { get; private set; }
-            public IReadOnlyList<_NotAsExpectPoint> NotAsExpectPoints { get; private set; }
-        }
-        //public _Result Result { get; private set; }
         public double Index { get; private set; }
 
         public Accuracy(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, IFCM_Result result)
@@ -87,5 +57,38 @@ namespace ProjectOneClasses.ValidityCriterias.External
             //Result = new _Result(X.Count - notAsExpect, notAsExpect, notAsExpectPoints);
             Index = 1.0 * (X.Count - notAsExpect) / X.Count;
         }
+
+
+        //public class _NotAsExpectPoint
+        //{
+        //    public _NotAsExpectPoint(double[] point, int expectClusterIndex, int actualClusterIndex/*, int expectClusterName, int actualClusterName*/)
+        //    {
+        //        Point = point;
+        //        ExpectClusterIndex = expectClusterIndex;
+        //        ActualClusterIndex = actualClusterIndex;
+        //        //ExpectClusterName = expectClusterName;
+        //        //ActualClusterName = actualClusterName;
+        //    }
+
+        //    public double[] Point { get; private set; }
+        //    public int ExpectClusterIndex { get; private set; }
+        //    public int ActualClusterIndex { get; private set; }
+        //    //public int ExpectClusterName { get; private set; }
+        //    //public int ActualClusterName { get; private set; }
+        //}
+        //public class _Result
+        //{
+        //    public _Result(int asExpect, int notAsExpect, IReadOnlyList<_NotAsExpectPoint> notAsExpectPoints)
+        //    {
+        //        AsExpect = asExpect;
+        //        NotAsExpect = notAsExpect;
+        //        NotAsExpectPoints = notAsExpectPoints;
+        //    }
+
+        //    public int AsExpect { get; private set; }
+        //    public int NotAsExpect { get; private set; }
+        //    public IReadOnlyList<_NotAsExpectPoint> NotAsExpectPoints { get; private set; }
+        //}
+        //public _Result Result { get; private set; }
     }
 }

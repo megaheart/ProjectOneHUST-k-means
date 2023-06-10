@@ -1,4 +1,5 @@
-﻿using ProjectOneClasses.ValidityCriterias.External;
+﻿using ProjectOneClasses.ResultTypes;
+using ProjectOneClasses.ValidityCriterias.External;
 using System;
 using System.Collections.Generic;
 using System.Linq;

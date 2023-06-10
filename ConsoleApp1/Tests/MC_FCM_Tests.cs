@@ -8,6 +8,8 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ProjectOneClasses.ResultTypes;
+using ProjectOneClasses.Trials;
 
 namespace ConsoleApp1.Tests
 {
@@ -322,57 +324,59 @@ namespace ConsoleApp1.Tests
             {
                 //var dataInfo = datas[2];
                 var data = dataInfo.aCIDb;
-                var fcm = new MC_FCM(data.X, data.C);
-                fcm.ClustersGenerationMode = MC_FCM.CGMode.ChooseCFromXClustersRandomly;
+
+
+                var fcm = new MC_FCM_Trial(data.X, data.C, MC_FCM.CGMode.ChooseCFromXClustersRandomly,
+                    null, data.expect, 100);
                 fcm._solve();
-                var mc_fcm = new MC_FCM(data.X, data.C);
-                mc_fcm.ClustersGenerationMode = MC_FCM.CGMode.StupidRandom;
+
+                var mc_fcm = new MC_FCM_Trial(data.X, data.C, MC_FCM.CGMode.StupidRandom,
+                    null, data.expect, 100);
                 mc_fcm._solve();
-                var mc_fcm2 = new MC_FCM(data.X, data.C);
-                mc_fcm2.ClustersGenerationMode = MC_FCM.CGMode.Custom;
-                mc_fcm2.InitializeCluster = (X, C, m, e) =>
-                {
-                    return ClustersGenerator.KMeanPlusPlus_HardSelect(X, C, e);
-                };
+
+                var mc_fcm2 = new MC_FCM_Trial(data.X, data.C, MC_FCM.CGMode.Custom,
+                    (X, C, m, e) => {
+                        return ClustersGenerator.KMeanPlusPlus_HardSelect(X, C, e);
+                    }, data.expect, 100);
                 mc_fcm2._solve();
+
                 var mc_fcm3 = new MC_FCM(data.X, data.C);
-                mc_fcm2.ClustersGenerationMode = MC_FCM.CGMode.Custom;
-                mc_fcm2.InitializeCluster = (X, C, m, e) =>
+                mc_fcm3.ClustersGenerationMode = MC_FCM.CGMode.Custom;
+                mc_fcm3.InitializeCluster = (X, C, m, e) =>
                 {
                     return ClustersGenerator.KMeanPlusPlus_FarthestFirst_HardSelect(X, C, e);
                 };
                 mc_fcm3._solve();
+
                 var mc_fcm4 = new MC_FCM(data.X, data.C);
                 mc_fcm4.ClustersGenerationMode = MC_FCM.CGMode.MaxFuzzificationCoefficientGroups;
                 mc_fcm4._solve();
-                var mc_fcm5 = new MC_FCM(data.X, data.C);
-                mc_fcm5.ClustersGenerationMode = MC_FCM.CGMode.KMeanPlusPlus;
+
+                var mc_fcm5 = new MC_FCM_Trial(data.X, data.C, MC_FCM.CGMode.KMeanPlusPlus,
+                    null, data.expect, 100);
                 mc_fcm5._solve();
 
-                var r = fcm.Result as MC_FCM.MC_FCM_Result;
-                var r2 = mc_fcm.Result as MC_FCM.MC_FCM_Result;
-                var r3 = mc_fcm2.Result as MC_FCM.MC_FCM_Result;
-                var r4 = mc_fcm3.Result as MC_FCM.MC_FCM_Result;
-                var r5 = mc_fcm4.Result as MC_FCM.MC_FCM_Result;
-                var r6 = mc_fcm5.Result as MC_FCM.MC_FCM_Result;
+               
+                var r4 = mc_fcm3.Result;
+                var r5 = mc_fcm4.Result;
 
-                int min_L = new[] { r.l, r2.l, r3.l, r4.l, r5.l, r6.l }.Min();
+                int min_L = new[] { fcm.AverageL, mc_fcm.AverageL, mc_fcm2.AverageL, r4.l, r5.l, mc_fcm5.AverageL }.Min();
 
                 pt.PrintRow(dataInfo.Name,
                     new ColumnContent()
                     {
-                        Content = r.l,
-                        Color = (r.l == min_L) ? ConsoleColor.Yellow : ConsoleColor.White
+                        Content = fcm.AverageL,
+                        Color = (fcm.AverageL == min_L) ? ConsoleColor.Yellow : ConsoleColor.White
                     },
                     new ColumnContent()
                     {
-                        Content = r2.l,
-                        Color = (r2.l == min_L) ? ConsoleColor.Yellow : ConsoleColor.White
+                        Content = mc_fcm.AverageL,
+                        Color = (mc_fcm.AverageL == min_L) ? ConsoleColor.Yellow : ConsoleColor.White
                     },
                     new ColumnContent()
                     {
-                        Content = r3.l,
-                        Color = (r3.l == min_L) ? ConsoleColor.Yellow : ConsoleColor.White
+                        Content = mc_fcm2.AverageL,
+                        Color = (mc_fcm2.AverageL == min_L) ? ConsoleColor.Yellow : ConsoleColor.White
                     },
                     new ColumnContent()
                     {
@@ -386,30 +390,30 @@ namespace ConsoleApp1.Tests
                     },
                     new ColumnContent()
                     {
-                        Content = r6.l,
-                        Color = (r6.l == min_L) ? ConsoleColor.Yellow : ConsoleColor.White
+                        Content = mc_fcm5.AverageL,
+                        Color = (mc_fcm5.AverageL == min_L) ? ConsoleColor.Yellow : ConsoleColor.White
                     });
 
-                var fcm_sswc = new SSWC(data.X, data.C, /*new FakeFCM_Result(data.X, data.expect, data.C)*/fcm.Result).Index;
-                var fcm_db = new DB(data.X, data.C, fcm.Result).Index;
-                var fcm_pbm = new PBM(data.X, data.C, fcm.Result).Index;
-                var fcm_accuracy = new Accuracy(data.X, data.C, data.expect, fcm.Result).Index;
-                var fcm_rand = new Rand(data.X, data.C, data.expect, fcm.Result).Index;
-                var fcm_jaccard = new Jaccard(data.X, data.C, data.expect, fcm.Result).Index;
+                var fcm_sswc = fcm.Evaluation_Result.SSWC;
+                var fcm_db = fcm.Evaluation_Result.DB;
+                var fcm_pbm = fcm.Evaluation_Result.PBM;
+                var fcm_accuracy = fcm.Evaluation_Result.Accuracy;
+                var fcm_rand = fcm.Evaluation_Result.Rand;
+                var fcm_jaccard = fcm.Evaluation_Result.Jaccard;
 
-                var mc_fcm_sswc = new SSWC(data.X, data.C, mc_fcm.Result).Index;
-                var mc_fcm_db = new DB(data.X, data.C, mc_fcm.Result).Index;
-                var mc_fcm_pbm = new PBM(data.X, data.C, mc_fcm.Result).Index;
-                var mc_fcm_accuracy = new Accuracy(data.X, data.C, data.expect, mc_fcm.Result).Index;
-                var mc_fcm_rand = new Rand(data.X, data.C, data.expect, mc_fcm.Result).Index;
-                var mc_fcm_jaccard = new Jaccard(data.X, data.C, data.expect, mc_fcm.Result).Index;
+                var mc_fcm_sswc = mc_fcm.Evaluation_Result.SSWC;
+                var mc_fcm_db = mc_fcm.Evaluation_Result.DB;
+                var mc_fcm_pbm = mc_fcm.Evaluation_Result.PBM;
+                var mc_fcm_accuracy = mc_fcm.Evaluation_Result.Accuracy;
+                var mc_fcm_rand = mc_fcm.Evaluation_Result.Rand;
+                var mc_fcm_jaccard = mc_fcm.Evaluation_Result.Jaccard;
 
-                var mc_fcm2_sswc = new SSWC(data.X, data.C, mc_fcm2.Result).Index;
-                var mc_fcm2_db = new DB(data.X, data.C, mc_fcm2.Result).Index;
-                var mc_fcm2_pbm = new PBM(data.X, data.C, mc_fcm2.Result).Index;
-                var mc_fcm2_accuracy = new Accuracy(data.X, data.C, data.expect, mc_fcm2.Result).Index;
-                var mc_fcm2_rand = new Rand(data.X, data.C, data.expect, mc_fcm2.Result).Index;
-                var mc_fcm2_jaccard = new Jaccard(data.X, data.C, data.expect, mc_fcm2.Result).Index;
+                var mc_fcm2_sswc = mc_fcm2.Evaluation_Result.SSWC;
+                var mc_fcm2_db = mc_fcm2.Evaluation_Result.DB;
+                var mc_fcm2_pbm = mc_fcm2.Evaluation_Result.PBM;
+                var mc_fcm2_accuracy = mc_fcm2.Evaluation_Result.Accuracy;
+                var mc_fcm2_rand = mc_fcm2.Evaluation_Result.Rand;
+                var mc_fcm2_jaccard = mc_fcm2.Evaluation_Result.Jaccard;
 
                 var mc_fcm3_sswc = new SSWC(data.X, data.C, mc_fcm3.Result).Index;
                 var mc_fcm3_db = new DB(data.X, data.C, mc_fcm3.Result).Index;
@@ -425,12 +429,12 @@ namespace ConsoleApp1.Tests
                 var mc_fcm4_rand = new Rand(data.X, data.C, data.expect, mc_fcm4.Result).Index;
                 var mc_fcm4_jaccard = new Jaccard(data.X, data.C, data.expect, mc_fcm4.Result).Index;
 
-                var mc_fcm5_sswc = new SSWC(data.X, data.C, mc_fcm5.Result).Index;
-                var mc_fcm5_db = new DB(data.X, data.C, mc_fcm5.Result).Index;
-                var mc_fcm5_pbm = new PBM(data.X, data.C, mc_fcm5.Result).Index;
-                var mc_fcm5_accuracy = new Accuracy(data.X, data.C, data.expect, mc_fcm5.Result).Index;
-                var mc_fcm5_rand = new Rand(data.X, data.C, data.expect, mc_fcm5.Result).Index;
-                var mc_fcm5_jaccard = new Jaccard(data.X, data.C, data.expect, mc_fcm5.Result).Index;
+                var mc_fcm5_sswc = mc_fcm5.Evaluation_Result.SSWC;
+                var mc_fcm5_db = mc_fcm5.Evaluation_Result.DB;
+                var mc_fcm5_pbm = mc_fcm5.Evaluation_Result.PBM;
+                var mc_fcm5_accuracy = mc_fcm5.Evaluation_Result.Accuracy;
+                var mc_fcm5_rand = mc_fcm5.Evaluation_Result.Rand;
+                var mc_fcm5_jaccard = mc_fcm5.Evaluation_Result.Jaccard;
 
                 var max_sswc = new[] { fcm_sswc, mc_fcm_sswc, mc_fcm2_sswc, mc_fcm3_sswc, mc_fcm4_sswc/*, mc_fcm5_sswc*/ }.Max();
                 var min_db = new[] { fcm_db, mc_fcm_db, mc_fcm2_db, mc_fcm3_db, mc_fcm4_db/*, mc_fcm5_db*/ }.Min();

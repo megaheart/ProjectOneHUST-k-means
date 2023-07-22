@@ -13,8 +13,12 @@ namespace ProjectOneClasses.Utilities
         private double[] _m2;
         public M2_PrecalculationTable(in double M, in double U_expect, in double epsilon)
         {
-            InitFloatM2Table(1000, M, U_expect, epsilon);
-            //InitIntegerM2Table(1000, M, U_expect);
+            //InitFloatM2Table(1000, M, U_expect, epsilon);
+            InitIntegerM2Table(1000, M, U_expect);
+            //for (int i = 0; i < _m2.Length; i++)
+            //{
+            //    Console.WriteLine($"{i} {_m2[i]}");
+            //}
         }
 
         public double this[double u]

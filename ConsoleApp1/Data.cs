@@ -12,15 +12,15 @@ namespace ConsoleApp1
     {
         static string DataSetFolder = System.IO.Path.GetFullPath("DataSet");
         public static Data[] datas = new Data[] {
-        new Data(){Name = "Iris", Path=$"{DataSetFolder}\\iris.data"},
-        new Data(){Name = "Iris Shuffled", Path=$"{DataSetFolder}\\iris2.data"},
-        new Data(){Name = "Wine", Path=$"{DataSetFolder}\\wine.data"},
-        new Data(){Name = "Statlog(Heart)", Path=$"{DataSetFolder}\\heart.dat", Delimiter=' '},
-        new Data(){Name = "Vertebral Column(2C)", Path=$"{DataSetFolder}\\column_2C.dat", Delimiter=' '},
-        new Data(){Name = "Vertebral Column(3C)", Path=$"{DataSetFolder}\\column_3C.dat", Delimiter=' '},
-        new Data(){Name = "Glass", Path=$"{DataSetFolder}\\glass.data"},
-        new Data(){Name = "Bezdek Iris", Path=$"{DataSetFolder}\\bezdekIris.data"},
-    };
+            new Data(){Name = "Iris", Path=$"{DataSetFolder}\\iris.data"},
+            new Data(){Name = "Iris Shuffled", Path=$"{DataSetFolder}\\iris2.data"},
+            new Data(){Name = "Wine", Path=$"{DataSetFolder}\\wine.data"},
+            new Data(){Name = "Statlog(Heart)", Path=$"{DataSetFolder}\\heart.dat", Delimiter=' '},
+            new Data(){Name = "Vertebral Column(2C)", Path=$"{DataSetFolder}\\column_2C.dat", Delimiter=' '},
+            new Data(){Name = "Vertebral Column(3C)", Path=$"{DataSetFolder}\\column_3C.dat", Delimiter=' '},
+            new Data(){Name = "Glass", Path=$"{DataSetFolder}\\glass.data"},
+            new Data(){Name = "Bezdek Iris", Path=$"{DataSetFolder}\\bezdekIris.data"},
+        };
         public static void CreateSemiSupervisonOfAllData()
         {
             foreach (var dataInfo in datas)

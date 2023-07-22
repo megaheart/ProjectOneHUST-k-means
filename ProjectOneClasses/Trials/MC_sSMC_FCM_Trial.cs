@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ProjectOneClasses.Trials
 {
-    public class sSMC_FCM_Trial
+    public class MC_sSMC_FCM_Trial
     {
         private IReadOnlyList<double[]> X;
         private int C;
@@ -17,15 +17,15 @@ namespace ProjectOneClasses.Trials
         private double epsilon;
         private int trialTimes;
         IReadOnlyList<int> expect;
-        double M; 
+        //double M;
         double alpha;
-        public sSMC_FCM_Trial([NotNull] IReadOnlyList<double[]> X, int C,
+        public MC_sSMC_FCM_Trial([NotNull] IReadOnlyList<double[]> X, int C,
             //IReadOnlyDictionary<int, int> Y,
             int semiSupervisedDegree,
-            IReadOnlyList<int> expect, int trialTimes, double M = 2, double alpha = 0.6, double epsilon = 0.0001)
+            IReadOnlyList<int> expect, int trialTimes/*, double M = 2*/, double alpha = 0.6, double epsilon = 0.0001)
         {
             if (trialTimes < 1) throw new ArgumentOutOfRangeException($"{nameof(trialTimes)} must be positive.");
-            if (semiSupervisedDegree < 0 || semiSupervisedDegree > 100) 
+            if (semiSupervisedDegree < 0 || semiSupervisedDegree > 100)
                 throw new ArgumentOutOfRangeException($"{nameof(trialTimes)} must be between 0 and 100.");
 
             if (semiSupervisedDegree != 0)
@@ -46,10 +46,10 @@ namespace ProjectOneClasses.Trials
             this.epsilon = epsilon;
             this.trialTimes = trialTimes;
             this.expect = expect;
-            this.M = M;
+            //this.M = M;
             this.alpha = alpha;
             this.semiSupervisedDegree = semiSupervisedDegree;
-            
+
         }
         public sSMC_FCM_Evaluation_Result Evaluation_Result { get; private set; }
         public int AverageL { get; private set; }
@@ -65,7 +65,7 @@ namespace ProjectOneClasses.Trials
                 //Generate the semi-supervised set
                 var Y = gen.Generate();
                 //Solve the problem with sSMC-FCM
-                var mc_fcm = new sSMC_FCM(X, C, Y, M, alpha, epsilon);
+                var mc_fcm = new MC_sSMC_FCM(X, C, Y, alpha, epsilon);
                 mc_fcm._solve();
 
                 l += mc_fcm.Result.l;

@@ -163,7 +163,7 @@ namespace ProjectOneClasses
                     if (l < 2)
                     {
                         //var aaaa = M2[i];
-                        M2[i] = CalculateM2(Y, m[i], alpha, U[i][k]);
+                        M2[i] = CalculateM2(Y, m[i], alpha, U[i][k], epsilon);
                         //var bbbb = M2[i];
                     }    
                     double m2 = M2[i];
@@ -238,17 +238,48 @@ namespace ProjectOneClasses
 
             Result = new MC_sSMC_FCM_Result(V, U, l);
         }
-        public static double CalculateM2(IReadOnlyDictionary<int, int> Y, double M, double alpha, double Uik)
+        public static double CalculateM2(IReadOnlyDictionary<int, int> Y, double M, double alpha, double Uik, double epsilon)
         {
             double right = M * Math.Pow((1 - alpha) / ((1 / Uik) - 1), M - 1);
-            double M2 = Math.Max(M, -1 / Math.Log(alpha)); // Start value of M2
-            double left = M2 * Math.Pow(alpha, M2 - 1);
-            while (left > right)
+            //double M2 = Math.Max(M, -1 / Math.Log(alpha)); // Start value of M2
+            //double left = M2 * Math.Pow(alpha, M2 - 1);
+            //while (left > right)
+            //{
+            //    M2 += 1;
+            //    left = M2 * Math.Pow(alpha, M2 - 1);
+            //}
+            //return M2;
+
+            double M2_l = Math.Max(M, -1 / Math.Log(alpha)); // Start value of M2
+            double left_l = M2_l * Math.Pow(alpha, M2_l - 1);
+            if (left_l <= right)
             {
-                M2 += 1;
-                left = M2 * Math.Pow(alpha, M2 - 1);
+                return M2_l;
             }
-            return M2;
+            double M2_incr = 1;
+            double M2_r = M2_l + M2_incr;
+            double left_r = M2_r * Math.Pow(alpha, M2_r - 1);
+            while (left_r > right)
+            {
+                M2_incr *= 2;
+                M2_r = M2_l + M2_incr;
+                left_r = M2_r * Math.Pow(alpha, M2_r - 1);
+            }
+
+            while ((M2_r - M2_l) > epsilon)
+            {
+                double M2_mid = (M2_l + M2_r) / 2;
+                double left_mid = M2_mid * Math.Pow(alpha, M2_mid - 1);
+                if (left_mid > right)
+                {
+                    M2_l = M2_mid;
+                }
+                else
+                {
+                    M2_r = M2_mid;
+                }
+            }
+            return M2_r;
         }
         public static double GetSquareDistanse(double[] x1, double[] x2)
         {

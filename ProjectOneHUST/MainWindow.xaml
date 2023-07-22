@@ -34,7 +34,7 @@
                                   Mode="PrimaryMid">
             <StackPanel Orientation="Horizontal">
                 <TextBlock FontSize="20" FontWeight="DemiBold" VerticalAlignment="Center">
-                    Project I - Trần Phúc Mạnh Linh 20200352 - GVHD PGS. Trần Đình Khang: Tìm hiểu, viết lại, thử nghiệm cải tiến thuật toán thuật toán FCM, FC-FCM, sSMC-FCM.
+                    Project II - Trần Phúc Mạnh Linh 20200352 - GVHD PGS. Trần Đình Khang.
                 </TextBlock>
             </StackPanel>
         </materialDesign:ColorZone>

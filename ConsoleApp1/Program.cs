@@ -132,10 +132,10 @@ public class Program
         //MC_FCM_Tests.MC_FCM_DiffGenClusters_Benchmark();
         //MC_FCM_Tests.MC_SSMC_FCM_Benchmark();
         //MC_FCM_Tests.FCM_And_MC_FCM_BenchMark();
-        //sSMC_FCM_Tests.SSMC_FCM_WithTrial_Benchmark();
+        sSMC_FCM_Tests.SSMC_FCM_WithTrial_Benchmark();
         //sSMC_FCM_Tests.SSMC_FCM_Benchmark();
         //sSMC_FCM_Tests.SSMC_FCM_VectorM2_Benchmark();
-        MC_sSMC_FCM_Tests.MC_SSMC_FCM_WithTrial_Benchmark();
+        //MC_sSMC_FCM_Tests.MC_SSMC_FCM_WithTrial_Benchmark();
         //MC_sSMC_FCM_Tests.MC_SSMC_FCM_Benchmark();
         //CustomBenchmark_1();
 

@@ -35,6 +35,7 @@ namespace ProjectOneHUST
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "aci db (*.data;*.dat)|*.data;*.dat|Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            openFileDialog.InitialDirectory = System.IO.Path.Combine(Environment.CurrentDirectory, "DataSet");
             if (openFileDialog.ShowDialog() == true)
             {
                 try
@@ -61,6 +62,14 @@ namespace ProjectOneHUST
 
         private void Button_Click_RunAlgorithm(object sender, RoutedEventArgs e)
         {
+
+            if(aCIDb == null)
+            {
+                MaterialDesignThemes.Wpf.DialogHost
+                        .Show("Vui lòng chọn file đầu vào.");
+                return;
+            }
+
             Button btn = (Button)sender;
             ButtonProgressAssist.SetIsIndicatorVisible(btn, true);
             btn.IsEnabled = false;
@@ -74,6 +83,10 @@ namespace ProjectOneHUST
                 if (ClusterGenOptions_FCM.SelectedIndex == 1)
                 {
                     cGMode = MC_FCM.CGMode.MaxFuzzificationCoefficientGroups;
+                }
+                else if (ClusterGenOptions_FCM.SelectedIndex == 2)
+                {
+                    cGMode = MC_FCM.CGMode.KMeanPlusPlus;
                 }
                 thread = new Thread(new ParameterizedThreadStart(a =>
                 {
@@ -178,6 +191,10 @@ namespace ProjectOneHUST
                 if (ClusterGenOptions_MC_FCM.SelectedIndex == 1)
                 {
                     cGMode = MC_FCM.CGMode.MaxFuzzificationCoefficientGroups;
+                }
+                else if (ClusterGenOptions_FCM.SelectedIndex == 2)
+                {
+                    cGMode = MC_FCM.CGMode.KMeanPlusPlus;
                 }
                 thread = new Thread(new ParameterizedThreadStart(a =>
                 {

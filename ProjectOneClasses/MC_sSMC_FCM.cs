@@ -238,7 +238,8 @@ namespace ProjectOneClasses
 
             Result = new MC_sSMC_FCM_Result(V, U, l);
         }
-        public static double CalculateM2(IReadOnlyDictionary<int, int> Y, double M, double alpha, double Uik, double epsilon)
+        public static double CalculateM2(IReadOnlyDictionary<int, int> Y, double M, 
+            double alpha, double Uik, double epsilon, double m2Max = 8)
         {
             double right = M * Math.Pow((1 - alpha) / ((1 / Uik) - 1), M - 1);
             //double M2 = Math.Max(M, -1 / Math.Log(alpha)); // Start value of M2
@@ -256,15 +257,19 @@ namespace ProjectOneClasses
             {
                 return M2_l;
             }
-            double M2_incr = 1;
-            double M2_r = M2_l + M2_incr;
+            //double M2_incr = 1;
+            //double M2_r = M2_l + M2_incr;
+            double M2_r = m2Max;
             double left_r = M2_r * Math.Pow(alpha, M2_r - 1);
-            while (left_r > right)
-            {
-                M2_incr *= 2;
-                M2_r = M2_l + M2_incr;
-                left_r = M2_r * Math.Pow(alpha, M2_r - 1);
-            }
+
+            if(left_r > right) return M2_r;
+
+            //while (left_r > right)
+            //{
+            //    M2_incr *= 2;
+            //    M2_r = M2_l + M2_incr;
+            //    left_r = M2_r * Math.Pow(alpha, M2_r - 1);
+            //}
 
             while ((M2_r - M2_l) > epsilon)
             {

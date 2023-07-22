@@ -142,6 +142,7 @@
                                 <ComboBox Width="200" HorizontalAlignment="Left" x:Name="ClusterGenOptions_FCM">
                                     <ComboBoxItem Content="Ngẫu nhiên" IsSelected="True"/>
                                     <ComboBoxItem Content="Chọn cụm mật độ cao" />
+                                    <ComboBoxItem Content="KMean++" />
                                 </ComboBox>
                             </StackPanel>
                             <RadioButton Content="MC-FCM" DataContext="1" x:Name="ChooseBtn_MC_FCM"
@@ -152,6 +153,7 @@
                                 <ComboBox Width="200" HorizontalAlignment="Left" x:Name="ClusterGenOptions_MC_FCM">
                                     <ComboBoxItem Content="Ngẫu nhiên" IsSelected="True" />
                                     <ComboBoxItem Content="Chọn cụm mật độ cao" />
+                                    <ComboBoxItem Content="KMean++" />
                                 </ComboBox>
                             </StackPanel>
                             <RadioButton Content="sSMC-FCM" DataContext="2" x:Name="ChooseBtn_sSMC_FCM"

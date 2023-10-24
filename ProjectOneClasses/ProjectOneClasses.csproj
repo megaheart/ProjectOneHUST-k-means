@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -8,14 +8,46 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="DataSet\bezdekIris.data" />
-    <None Remove="DataSet\column_2C.dat" />
-    <None Remove="DataSet\column_3C.dat" />
-    <None Remove="DataSet\glass.data" />
-    <None Remove="DataSet\heart.dat" />
-    <None Remove="DataSet\iris.data" />
-    <None Remove="DataSet\iris2.data" />
-    <None Remove="DataSet\wine.data" />
+    <None Remove="DataSet\bezdekIris.data" />
+
+
+
+
+    <None Remove="DataSet\column_2C.dat" />
+
+
+
+
+    <None Remove="DataSet\column_3C.dat" />
+
+
+
+
+    <None Remove="DataSet\glass.data" />
+
+
+
+
+    <None Remove="DataSet\heart.dat" />
+
+
+
+
+    <None Remove="DataSet\iris.data" />
+
+
+
+
+    <None Remove="DataSet\iris2.data" />
+
+
+
+
+    <None Remove="DataSet\wine.data" />
+
+
+
+
   </ItemGroup>
 
   <ItemGroup>

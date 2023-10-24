@@ -74,7 +74,7 @@ namespace ProjectOneClasses.Utilities
                     double[] distances = new double[k]; // we currently have k means
 
                     for (int ki = 0; ki < k; ++ki)
-                        distances[ki] = Caculation.EuclideanDistanseSquared(X[i], V[ki]);
+                        distances[ki] = Calculation.EuclideanDistanseSquared(X[i], V[ki]);
                     dSquareds[i] = distances.Min();
                 } // i
 
@@ -169,7 +169,7 @@ namespace ProjectOneClasses.Utilities
                     double[] distances = new double[k]; // we currently have k means
 
                     for (int ki = 0; ki < k; ++ki)
-                        distances[ki] = Caculation.EuclideanDistanseSquared(X[i], V_sorted[ki]);
+                        distances[ki] = Calculation.EuclideanDistanseSquared(X[i], V_sorted[ki]);
                     dSquareds[i] = distances.Min();
                 } // i
 
@@ -214,7 +214,7 @@ namespace ProjectOneClasses.Utilities
                     double[] distances = new double[k]; // we currently have k means
 
                     for (int ki = 0; ki < k; ++ki)
-                        distances[ki] = Caculation.EuclideanDistanseSquared(X[i], V[ki]);
+                        distances[ki] = Calculation.EuclideanDistanseSquared(X[i], V[ki]);
                     var dSquared = distances.Min();
 
                     if (dSquared > maxDSquared)
@@ -256,10 +256,10 @@ namespace ProjectOneClasses.Utilities
                 mean[j] /= N;
 
             int idx = 0;
-            double dSquaredToMean_max = Caculation.EuclideanDistanseSquared(X[0], mean);
+            double dSquaredToMean_max = Calculation.EuclideanDistanseSquared(X[0], mean);
 
             for (int i = 1; i < N; i++) {
-                double dSquaredToMean = Caculation.EuclideanDistanseSquared(X[i], mean);
+                double dSquaredToMean = Calculation.EuclideanDistanseSquared(X[i], mean);
 
                 if(dSquaredToMean > dSquaredToMean_max)
                 {
@@ -287,7 +287,7 @@ namespace ProjectOneClasses.Utilities
                     double[] distances = new double[k]; // we currently have k means
 
                     for (int ki = 0; ki < k; ++ki)
-                        distances[ki] = Caculation.EuclideanDistanseSquared(X[i], V[ki]);
+                        distances[ki] = Calculation.EuclideanDistanseSquared(X[i], V[ki]);
                     var dSquared = distances.Min();
 
                     if (dSquared > maxDSquared)

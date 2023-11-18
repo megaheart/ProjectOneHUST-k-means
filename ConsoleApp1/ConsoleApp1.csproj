@@ -9,6 +9,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProjectOneClasses\ProjectOneClasses.csproj" />
+    <ProjectReference Include="..\PythonInteractive\PythonInteractive.csproj" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="xcopy /E /I /Y /D &quot;$(SolutionDir)JupiterNotebooks\Python&quot; &quot;$(TargetDir)Python&quot;" />
+  </Target>
 
 </Project>

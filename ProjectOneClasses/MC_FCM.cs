@@ -12,8 +12,9 @@ namespace ProjectOneClasses
         private IReadOnlyList<double[]> X;
         private int C;
         private double epsilon;
+        int maxInterator;
         public MC_FCM_Result Result { get; private set; } = null;
-        public MC_FCM([NotNull] IReadOnlyList<double[]> X, int C, double epsilon = 0.0001, double[] m = null)
+        public MC_FCM([NotNull] IReadOnlyList<double[]> X, int C, double epsilon = 0.0001, int maxInterator = 200, double[] m = null)
         {
             if (C < 1) throw new Exception("C must be more than 0");
             if (C > X.Count) throw new Exception("C cannot be more than number of X");
@@ -21,6 +22,7 @@ namespace ProjectOneClasses
             this.C = C;
             this.m = m;
             this.epsilon = epsilon;
+            this.maxInterator = maxInterator;
         }
         public void Solve(Action<MC_FCM> callback)
         {
@@ -71,7 +73,7 @@ namespace ProjectOneClasses
             }
             //Main
             int l = 0;
-            while (true)
+            while (l < maxInterator)
             {
                 l++;
                 //B2: Update U[i][k]

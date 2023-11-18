@@ -1,40 +1,79 @@
-﻿using System;
+﻿using ProjectOneClasses.Models;
+using ProjectOneClasses.ResultTypes;
+using ProjectOneClasses.Utilities;
+using PythonInteractive;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using ProjectOneClasses;
-using ProjectOneClasses.Models;
-using ProjectOneClasses.ResultTypes;
-using ProjectOneClasses.Trials;
-using ProjectOneClasses.Utilities;
-using ProjectOneClasses.ValidityCriterias.External;
-using PythonInteractive;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ConsoleApp1.Tests
 {
-    /// <summary>
-    /// Train model with training data and labels, and return a model
-    /// </summary>
-    /// <typeparam name="T">Model type</typeparam>
-    /// <param name="trainData">Training data</param>
-    /// <param name="C">Number of cluster</param>
-    /// <param name="trainLabels">Training labels</param>
-    /// <returns>a model after training</returns>
-    public delegate T TrainFunction<T>(IReadOnlyList<double[]> trainData, int C, IReadOnlyList<int> trainLabels);
-    /// <summary>
-    /// Predict labels of test data with a model
-    /// </summary>
-    /// <typeparam name="T">Model type</typeparam>
-    /// <param name="model">Model after training and need testing</param>
-    /// <param name="testData">Test data</param>
-    /// <returns>Predicted labels of test data</returns>
-    public delegate IReadOnlyList<int> PredictFunction<T>(T model, IReadOnlyList<double[]> testData);
-
-    public class Model_Tests
+    public record Model_PredictUntrainedClass_Test_Data(List<double[]> trainData, List<int> trainLabels, int C, List<double[]> testTrainedClassData, List<int> testTrainedClassLabels, List<double[]> testUntrainedClassData, List<int> testUntrainedClassLabels)
     {
+        public IReadOnlyList<double[]> TrainData { get => trainData; }
+        public IReadOnlyList<int> TrainLabels { get => trainLabels; }
+        public int C { get => C; }
+        public IReadOnlyList<double[]> TestTrainedClassData { get => testTrainedClassData; }
+        public IReadOnlyList<int> TestTrainedClassLabels { get => testTrainedClassLabels; }
+        public IReadOnlyList<double[]> TestUntrainedClassData { get => testUntrainedClassData; }
+        public IReadOnlyList<int> TestUntrainedClassLabels { get => testUntrainedClassLabels; }
+
+    }
+    public class Model_PredictUntrainedClass_Test
+    {
+        public static List<List<int>> GroupDataIndexesByLabel(IReadOnlyList<double[]> data, IReadOnlyList<int> labels, int C)
+        {
+            var dataByLabel = new List<List<int>>(C);
+            for (int i = 0; i < C; i++)
+            {
+                dataByLabel.Add(new List<int>());
+            }
+            for (int i = 0; i < data.Count; i++)
+            {
+                dataByLabel[labels[i]].Add(i);
+            }
+            return dataByLabel;
+        }
+
+        public static Model_PredictUntrainedClass_Test_Data SplitData(IEnumerable<int> trainClasses, IEnumerable<int> testClasses, List<List<int>> dataIndexesByLabel, IReadOnlyList<double[]> data, IReadOnlyList<int> labels, double testPercent = 0.2)
+        {
+            int C = dataIndexesByLabel.Count;
+
+            var trainClassDataIndexes = new List<int>();
+            foreach (var trainClass in trainClasses)
+            {
+                trainClassDataIndexes.AddRange(dataIndexesByLabel[trainClass]);
+            }
+            trainClassDataIndexes.Shuffle();
+
+            var untrainedClassDataIndexes = new List<int>();
+            foreach (var testClass in testClasses)
+            {
+                untrainedClassDataIndexes.AddRange(dataIndexesByLabel[testClass]);
+            }
+            untrainedClassDataIndexes.Shuffle();
+
+            var trainCount = (int)(trainClassDataIndexes.Count * (1 - testPercent));
+            var untrainedCount = Math.Min(trainClassDataIndexes.Count - trainCount, untrainedClassDataIndexes.Count);
+
+            var trainData = trainClassDataIndexes.Take(trainCount).Select(i => data[i]).ToList();
+            var trainLabels = trainClassDataIndexes.Take(trainCount).Select(i => labels[i]).ToList();
+
+            var testTrainedClassData = trainClassDataIndexes.Skip(trainCount).Select(i => data[i]).ToList();
+            var testTrainedClassLabels = trainClassDataIndexes.Skip(trainCount).Select(i => labels[i]).ToList();
+
+            var testUntrainedClassData = untrainedClassDataIndexes.Take(untrainedCount).Select(i => data[i]).ToList();
+            var testUntrainedClassLabels = untrainedClassDataIndexes.Take(untrainedCount).Select(i => labels[i]).ToList();
+
+            return new Model_PredictUntrainedClass_Test_Data(trainData, trainLabels, C, testTrainedClassData, testTrainedClassLabels, testUntrainedClassData, testUntrainedClassLabels);
+        }
+
         public static void TestModel<T>(TrainFunction<T> train, PredictFunction<T> predict)
-            where T:class
+            where T : class
         {
             Data.LoadAllExampleData();
 
@@ -58,59 +97,46 @@ namespace ConsoleApp1.Tests
                 var X = data.X;
                 var expect = data.expect;
 
-                var indexes = Enumerable.Range(0, X.Count).ToList();
-                indexes.Shuffle();
+                var dataIndexesByLabel = GroupDataIndexesByLabel(X, expect, data.C);
 
-                // Config k - cross validation
-                int pieTrainCount = 4;
-                int pieTestCount = 1;
-                int pieCount = pieTrainCount + pieTestCount;
-                var pies = new IEnumerable<int>[pieCount];
-                int pieSize = X.Count / pieCount;
+                var testPercent = 0.2;
 
-                for (int i = 0; i < pieCount - 1; i++)
-                {
-                    var pie = indexes.Skip(i * pieSize).Take(pieSize);
-                    pies[i] = pie;
-                }
-                pies[pieCount - 1] = indexes.Skip((pieCount - 1) * pieSize);
-
-                Evaluation_Result meanResult = new Evaluation_Result(0, 0, 0, 0, 0, 0);
+                Evaluation_Result meanTrainedResult = new Evaluation_Result(0, 0, 0, 0, 0, 0);
+                Evaluation_Result meanUntrainedResult = new Evaluation_Result(0, 0, 0, 0, 0, 0);
 
                 int combinationCount = 0;
 
-                foreach (var combination in Calculation.GenerateAllCombinations<IEnumerable<int>>(pies, Math.Min(pieTrainCount, pieTestCount)))
-                {
-                    IEnumerable<int> trainIndexes = null;
-                    IEnumerable<int> testIndexes = null;
-                    int testIndexesIndex = 0;
+                var pies = Enumerable.Range(0, data.C).ToList();
+                var k = (int)Math.Ceiling(data.C * 2.0 / 3);
 
-                    for (int i = 0; i < pieCount; i++)
+                if(k < 2) continue;
+
+                foreach (var combination in Calculation.GenerateAllCombinations(pies, k))
+                {
+                    var trainedClasses = combination;
+                    var untrainedClasses = new List<int>();
+                    int trainedClassIndex = 0;
+
+                    for (int i = 0; i < data.C; i++)
                     {
-                        if (testIndexesIndex < combination.Count && combination[testIndexesIndex] == pies[i])
+                        if (trainedClassIndex < combination.Count && combination[trainedClassIndex] == i)
                         {
-                            testIndexes = testIndexes == null ? pies[i] : testIndexes.Concat(pies[i]);
-                            testIndexesIndex++;
+                            trainedClassIndex++;
                         }
                         else
                         {
-                            trainIndexes = trainIndexes == null ? pies[i] : trainIndexes.Concat(pies[i]);
+                            untrainedClasses.Add(i);
                         }
                     }
 
-                    var trainData = trainIndexes.Select(x => X[x]).ToList();
-                    var trainLabels = trainIndexes.Select(x => expect[x]).ToList();
-                    
-
-                    var testData = testIndexes.Select(x => X[x]).ToList();
-                    var testLabels = testIndexes.Select(x=> expect[x]).ToList();
+                    var test_data = SplitData(trainedClasses, untrainedClasses, dataIndexesByLabel, X, expect, testPercent);
 
 
                     //Train
                     T model = null;
                     try
                     {
-                        model = train(trainData, data.C, trainLabels);
+                        model = train(test_data.TrainData, data.C, test_data.TrainLabels);
                     }
                     catch (Exception e)
                     {
@@ -119,7 +145,8 @@ namespace ConsoleApp1.Tests
                         continue;
                     }
                     //Test
-                    var predictions = predict(model, testData);
+                    var trainedDataPredictions = predict(model, test_data.TestTrainedClassData);
+                    var untrainedDataPredictions = predict(model, test_data.TestUntrainedClassData);
 
                     if (model is IDisposable disposable)
                     {
@@ -130,15 +157,20 @@ namespace ConsoleApp1.Tests
                         asyncDisposable.DisposeAsync();
                     }
 
-                    var r = new Evaluation_Result(testData, data.C, testLabels, predictions);
+                    var trainedResult = new Evaluation_Result(test_data.TestTrainedClassData, data.C, test_data.TestTrainedClassLabels, trainedDataPredictions);
+                    var untrainedResult = new Evaluation_Result(test_data.TestUntrainedClassData, data.C, test_data.TestUntrainedClassLabels, untrainedDataPredictions);
 
-                    meanResult += r;
+                    meanTrainedResult += trainedResult;
+                    meanUntrainedResult += untrainedResult;
                     combinationCount++;
                 }
 
-                meanResult /= combinationCount;
+                meanTrainedResult /= combinationCount;
+                meanUntrainedResult /= combinationCount;
 
-                pt.PrintRow(dataInfo.Name, meanResult.SSWC, meanResult.DB, meanResult.PBM, meanResult.Accuracy, meanResult.Rand, meanResult.Jaccard);
+                pt.PrintRow(dataInfo.Name, "", "", "", "", "", "");
+                pt.PrintRow("   Trained Class", meanTrainedResult.SSWC, meanTrainedResult.DB, meanTrainedResult.PBM, meanTrainedResult.Accuracy, meanTrainedResult.Rand, meanTrainedResult.Jaccard);
+                pt.PrintRow("   Untrained Class", meanUntrainedResult.SSWC, meanUntrainedResult.DB, meanUntrainedResult.PBM, meanUntrainedResult.Accuracy, meanUntrainedResult.Rand, meanUntrainedResult.Jaccard);
 
                 pt.PrintLine();
             }
@@ -192,30 +224,6 @@ namespace ConsoleApp1.Tests
             TestModel(train, predict);
         }
 
-        public static void Test_sSMC_FCM_CxN_Predictable_Model()
-        {
-            TrainFunction<sSMC_FCM_CxN_Predictable_Model> train = (trainData, C, trainLabels) =>
-            {
-                var model = new sSMC_FCM_CxN_Predictable_Model();
-
-                var trainLabelMap = trainLabels.Select((x, i) => new Tuple<int, int>(i, x)).ToImmutableDictionary(x => x.Item1, x => x.Item2);
-
-                model.LearnFuzzificationCoefficientsMatrix(trainData, C, trainLabelMap);
-
-                return model;
-            };
-
-            PredictFunction<sSMC_FCM_CxN_Predictable_Model> predict = (model, testData) =>
-            {
-                var predictions = testData.Select(x => model.Predict(new[] { x})).SelectMany(x => x).ToArray();
-                return predictions;
-            };
-
-            Console.WriteLine("sSMC_FCM_CxN_Predictable_Model Benchmark\n");
-
-            TestModel(train, predict);
-        }
-
         public static void Test_MultiPredict_MC_sSMC_FCM_CxN_Predictable_Model()
         {
             TrainFunction<MC_sSMC_FCM_CxN_Predictable_Model> train = (trainData, C, trainLabels) =>
@@ -238,56 +246,6 @@ namespace ConsoleApp1.Tests
             Console.WriteLine("MC_sSMC_FCM_CxN_Predictable_Model MultiPredict Benchmark\n");
 
             TestModel(train, predict);
-        }
-
-        public static void Test_MC_sSMC_FCM_CxN_Predictable_Model()
-        {
-            TrainFunction<MC_sSMC_FCM_CxN_Predictable_Model> train = (trainData, C, trainLabels) =>
-            {
-                var model = new MC_sSMC_FCM_CxN_Predictable_Model();
-
-                var trainLabelMap = trainLabels.Select((x, i) => new Tuple<int, int>(i, x)).ToImmutableDictionary(x => x.Item1, x => x.Item2);
-
-                model.LearnFuzzificationCoefficientsMatrix(trainData, C, trainLabelMap);
-
-                return model;
-            };
-
-            PredictFunction<MC_sSMC_FCM_CxN_Predictable_Model> predict = (model, testData) =>
-            {
-                var predictions = testData.Select(x => model.Predict(new[] { x })).SelectMany(x => x).ToArray();
-                return predictions;
-            };
-
-            Console.WriteLine("MC_sSMC_FCM_CxN_Predictable_Model Benchmark\n");
-
-            TestModel(train, predict);
-        }
-
-        public static void Test_sSMC_FCM_CxN_Model()
-        {
-            Data.LoadAllExampleData();
-            var dataInfo = Data.datas[0];
-            var data = dataInfo.aCIDb;
-            sSMC_FCM_CxN_Model model = new sSMC_FCM_CxN_Model();
-            var label = data.expect.Select((x, i) => new Tuple<int, int>(i, x)).ToImmutableDictionary(x => x.Item1, x => x.Item2);
-
-            model.LearnFuzzificationCoefficientsMatrix(data.X, data.C, label);
-
-            model.Cluster();
-        }
-
-        public static void Test_MC_sSMC_FCM_CxN_Model()
-        {
-            Data.LoadAllExampleData();
-            var dataInfo = Data.datas[0];
-            var data = dataInfo.aCIDb;
-            MC_sSMC_FCM_CxN_Model model = new MC_sSMC_FCM_CxN_Model();
-            var label = data.expect.Select((x, i) => new Tuple<int, int>(i, x)).ToImmutableDictionary(x => x.Item1, x => x.Item2);
-
-            model.LearnFuzzificationCoefficientsMatrix(data.X, data.C, label);
-
-            model.Cluster();
         }
 
         public static void Test_ANN_Classifier_Model()

@@ -9,7 +9,7 @@ namespace ProjectOneClasses
 {
     public class FCM : MC_FCM
     {
-        public FCM([NotNull] IReadOnlyList<double[]> X, int C, double m, double epsilon = 0.0001) : base(X, C, epsilon)
+        public FCM([NotNull] IReadOnlyList<double[]> X, int C, double m, double epsilon = 0.0001, int maxInterator = 200) : base(X, C, epsilon, maxInterator)
         {
             this.m = new double[X.Count];
             for(int i = 0; i < X.Count; i++)

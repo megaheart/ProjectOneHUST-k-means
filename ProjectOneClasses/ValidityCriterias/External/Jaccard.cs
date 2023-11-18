@@ -13,19 +13,9 @@ namespace ProjectOneClasses.ValidityCriterias.External
     public class Jaccard
     {
         public double Index { get; private set; }
-        public Jaccard(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, IFCM_Result result)
+
+        private void CalculateIndex(IReadOnlyList<double[]> X, IReadOnlyList<int> expect, IReadOnlyList<int> actual)
         {
-            int[] actual = new int[X.Count];//Point X[i] is belonging to cluster whose index in V = actual[i]
-            var U = result.U;
-            for (int i = 0; i < X.Count; i++)
-            {
-                int k_max = 0;
-                for (int k = 1; k < C; k++)
-                {
-                    if (U[i][k] > U[i][k_max]) k_max = k;
-                }
-                actual[i] = k_max;
-            }
             int a, b, c, d;
             a = b = c /*= d*/ = 0;
             for (int i = 0; i < X.Count; i++)
@@ -59,6 +49,37 @@ namespace ProjectOneClasses.ValidityCriterias.External
                 }
             }
             Index = a * 1.0 / (a + b + c);
+        }
+
+
+        public Jaccard(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, IReadOnlyList<int> actual)
+        {
+            CalculateIndex(X, expect, actual);
+        }
+
+        public Jaccard(IReadOnlyList<double[]> X, int C, IReadOnlyDictionary<int, int> expect, IReadOnlyDictionary<int, int> actual)
+        {
+            var expectList = Utils.DictionaryToList(expect);
+            var actualList = Utils.DictionaryToList(actual);
+
+            CalculateIndex(X, expectList, actualList);
+        }
+
+        public Jaccard(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, IFCM_Result result)
+        {
+            int[] actual = new int[X.Count];//Point X[i] is belonging to cluster whose index in V = actual[i]
+            var U = result.U;
+            for (int i = 0; i < X.Count; i++)
+            {
+                int k_max = 0;
+                for (int k = 1; k < C; k++)
+                {
+                    if (U[i][k] > U[i][k_max]) k_max = k;
+                }
+                actual[i] = k_max;
+            }
+
+            CalculateIndex(X, expect, actual);
         }
     }
 }

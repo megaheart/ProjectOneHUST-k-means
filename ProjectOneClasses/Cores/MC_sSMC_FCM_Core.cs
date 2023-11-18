@@ -384,6 +384,12 @@ namespace ProjectOneClasses.Cores
                         maxGroupsV[xi][j] /= maxGroupSize;
                     }
             }
+
+            if(xis.Count != C)
+            {
+                throw new Exception("Not enough point to create C clusters");
+            }
+
             V = new double[C][];
             for (int i = 0; i < C; ++i)
             {

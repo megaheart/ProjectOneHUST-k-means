@@ -14,31 +14,21 @@ namespace ProjectOneClasses.ValidityCriterias.External
     {
         public double Index { get; private set; }
 
-        public Accuracy(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, IFCM_Result result)
+        private void CalculateIndex(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, List<int>[] clusters)
         {
-            List<int>[] clusters = new List<int>[C];
-            for (int i = 0; i < C; i++) clusters[i] = new List<int>(X.Count / C + 1);
-            var U = result.U;
-            for (int i = 0; i < X.Count; i++)
-            {
-                int k_max = 0;
-                for (int k = 1; k < C; k++)
-                {
-                    if (U[i][k] > U[i][k_max]) k_max = k;
-                }
-                clusters[k_max].Add(i);
-            }
             int[] tmpA = new int[C];
             int notAsExpect = 0;
             //var notAsExpectPoints = new List<_NotAsExpectPoint>();
             foreach (var cluster in clusters)
             {
                 for (int i = 0; i < C; i++) tmpA[i] = 0;
+
                 foreach (var i in cluster)
                 {
                     int ii = expect[i];
                     tmpA[ii]++;
                 }
+
                 int k_max = 0;
                 for (int k = 1; k < C; k++)
                 {
@@ -56,6 +46,41 @@ namespace ProjectOneClasses.ValidityCriterias.External
             }
             //Result = new _Result(X.Count - notAsExpect, notAsExpect, notAsExpectPoints);
             Index = 1.0 * (X.Count - notAsExpect) / X.Count;
+        }
+
+        public Accuracy(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, IReadOnlyList<int> actual)
+        {
+            var clusters = Utils.PredictionsToClusters(C, actual);
+
+            CalculateIndex(X, C, expect, clusters);
+        }
+
+        public Accuracy(IReadOnlyList<double[]> X, int C, IReadOnlyDictionary<int, int> expect, IReadOnlyDictionary<int, int> actual)
+        {
+            var expectList = Utils.DictionaryToList(expect);
+
+            var clusters = Utils.PredictionsToClusters(C, actual);
+
+            CalculateIndex(X, C, expectList, clusters);
+        }
+
+        public Accuracy(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, IFCM_Result result)
+        {
+            List<int>[] clusters = new List<int>[C];
+            for (int i = 0; i < C; i++) clusters[i] = new List<int>(X.Count / C + 1);
+            var U = result.U;
+            for (int i = 0; i < X.Count; i++)
+            {
+                int k_max = 0;
+                for (int k = 1; k < C; k++)
+                {
+                    if (U[i][k] > U[i][k_max]) k_max = k;
+                }
+                clusters[k_max].Add(i);
+            }
+
+            CalculateIndex(X, C, expect, clusters);
+            
         }
 
 

@@ -11,25 +11,21 @@ using System.Threading.Tasks;
 
 namespace ProjectOneClasses.Models
 {
-    public class MC_sSMC_FCM_CxN_Predictable_Model
+    public class sSMC_FCM_CxN_Predictable_Model
     {
+        private double M, alpha;
         private IReadOnlyList<double[]> X;
         private int C;
         private IReadOnlyDictionary<int, int> Y;
-        private double epsilon, alpha;
-
+        private double epsilon;
         int dimension;
-        double[][] V;
-        const double ml = 1.1, _mu = 4.1;
-        private double[] m;
-        public double[] M2;
         int n;
-
+        double[][] V;
+        public double M2;
+        public double[][] FuzzificationCoefficientsMatrix { get; private set; }
         int maxInterator = 200;
 
-        public void LearnFuzzificationCoefficientsMatrix([NotNull] IReadOnlyList<double[]> X, int C,
-            [NotNull] IReadOnlyDictionary<int, int> Y,
-            double alpha = 0.6, double epsilon = 0.0001)
+        public void LearnFuzzificationCoefficientsMatrix([NotNull] IReadOnlyList<double[]> X, int C, IReadOnlyDictionary<int, int> Y, double M = 2, double alpha = 0.6, double epsilon = 0.0001)
         {
             if (Y == null)
             {
@@ -39,19 +35,19 @@ namespace ProjectOneClasses.Models
             {
                 throw new ArgumentNullException(nameof(X));
             }
-
-            if (C < 1) throw new Exception("C must be more than 0");
-            if (C > X.Count) throw new Exception("C cannot be more than number of X");
+            if (Y.Count != X.Count)
+            {
+                throw new Exception("Supervision degree must be 100%");
+            }
 
             this.X = X.ToImmutableArray();
             this.C = C;
             this.epsilon = epsilon;
+            this.M = M;
             this.alpha = alpha;
             this.Y = Y.ToImmutableDictionary();
             this.n = X.Count;
             this.dimension = X[0].Length;
-
-            MC_sSMC_FCM_Core.GenerateFCAndFirstCClusters_MaxFuzzificationCoefficientGroups(X, Y, C, ml, _mu, epsilon, out m, out V);
 
             var U = new double[n][];
             for (int i = 0; i < n; i++)
@@ -66,15 +62,33 @@ namespace ProjectOneClasses.Models
                 D[i] = new double[C];
             }
 
-            MC_sSMC_FCM_Core.UpdateU_NonSupervision(X, Y, V, D, U, m);
+            //B1: Generate first clusters
+            V = sSMC_FCM_Core.GenerateFirstCClusters(X, Y, C, epsilon);
 
-            M2 = new double[n];
+            //B2: Update U[i][k]
+            //--- without supervision
+            sSMC_FCM_Core.UpdateU_NonSupervision(X, Y, V, D, U, M);
 
-            foreach (var y in Y)
+            //Calculate M' (3.3)
+            M2 = Math.Min(sSMC_FCM_Core.CalculateM2(Y/*, n, C*/, M, alpha, U), 8);
+
+            FuzzificationCoefficientsMatrix = new double[X.Count][];
+
+            for (var i = 0; i < X.Count; i++)
             {
-                int i = y.Key, k = y.Value;
-                M2[i] = MC_sSMC_FCM_Core.CalculateM2(Y, m[i], alpha, U[i][k], epsilon);
+                FuzzificationCoefficientsMatrix[i] = new double[C];
+
+                for (var j = 0; j < C; j++)
+                {
+                    FuzzificationCoefficientsMatrix[i][j] = M;
+                }
+
+                if (Y.TryGetValue(i, out var k))
+                {
+                    FuzzificationCoefficientsMatrix[i][k] = M2;
+                }
             }
+
         }
 
         public IReadOnlyList<int> Predict(IReadOnlyList<double[]> examples)
@@ -98,18 +112,15 @@ namespace ProjectOneClasses.Models
                 U[i] = new double[C];
             }
 
-            double[] m = new double[n];
-            Array.Copy(this.m, m, this.m.Length);
-            for(int i = this.m.Length; i < n; i++)
-            {
-                m[i] = ml;
-            }
-
             double[][] D = new double[n][];
-            var mu = new double[n][];
-            foreach (var i in Y.Keys)
+            for (int i = 0; i < n; i++)
             {
                 D[i] = new double[C];
+            }
+
+            double[][] mu = new double[n][];
+            for (int i = 0; i < n; i++)
+            {
                 mu[i] = new double[C];
             }
 
@@ -117,12 +128,8 @@ namespace ProjectOneClasses.Models
             for (int i = 0; i < C; i++)
             {
                 V_last[i] = new double[dimension];
-
             }
 
-            var sum_mu_i_j = new double[n];
-
-            //Main
             int l = 0;
             while (l < maxInterator)
             {
@@ -130,17 +137,16 @@ namespace ProjectOneClasses.Models
                 //B2: Update U[i][k]
 
                 //--- without supervision
-                MC_sSMC_FCM_Core.UpdateU_NonSupervision(X, Y, V, D, U, m);
-                //--- with supervision at k th cluster
+                sSMC_FCM_Core.UpdateU_NonSupervision(X, Y, V, D, U, M);
 
                 //--- with supervision at k th cluster
-                MC_sSMC_FCM_Core.UpdateU_Supervision(X, Y, V, D, U, mu, m, M2, sum_mu_i_j, epsilon);
+                sSMC_FCM_Core.UpdateU_Supervision(X, Y, V, D, U, mu, M, M2, epsilon);
 
                 //B3: Update V
-                MC_sSMC_FCM_Core.UpdateV(X, Y, V, V_last, U, m, M2);
+                sSMC_FCM_Core.UpdateV(X, Y, V, V_last, U, M, M2);
 
                 //B4: Check whether converging
-                if (MC_sSMC_FCM_Core.CheckConverging(V, V_last, epsilon)) break;
+                if (sSMC_FCM_Core.CheckConverging(V, V_last, epsilon)) break;
             }
 
             var predictedLabels = new int[examples.Count];

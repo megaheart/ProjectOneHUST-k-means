@@ -13,6 +13,7 @@ using ProjectOneClasses.ResultTypes;
 using ConsoleApp1.Tests;
 using System.Diagnostics;
 using ProjectOneClasses.Trials;
+using PythonInteractive.Utils;
 
 public class Program
 {
@@ -358,6 +359,28 @@ public class Program
         Console.SetWindowSize(Console.LargestWindowWidth, Console.LargestWindowHeight);
         ShowWindow(ThisConsole, MAXIMIZE);
 
+        //Console.WriteLine(Environment.CurrentDirectory);
+
+        //PythonIO pythonIO = new PythonIO(".\\Python\\ann_classifier_model.py");
+        //pythonIO.Start();
+
+        //var s = Console.ReadLine();
+        //while (s != "exit")
+        //{
+        //    var lines = new List<string>();
+        //    while (!string.IsNullOrWhiteSpace(s))
+        //    {
+        //        lines.Add(s);
+        //        s = Console.ReadLine();
+        //    }
+        //    var input = string.Join(Environment.NewLine, lines);
+        //    Console.WriteLine("Input: \'" + input + "\'");
+        //    var output = pythonIO.AddInput(input.ToString()).Result;
+        //    Console.WriteLine("Output: " + output.Output);
+        //    Console.WriteLine("Error: " + output.Error);
+        //    s = Console.ReadLine();
+        //}
+
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
 
@@ -365,7 +388,6 @@ public class Program
         //Data.Create_BestMCFCM_SemiSupervisonOfAllData();
         //MC_FCM_Tests.FCM_DiffGenClusters_Benchmark();
         //MC_FCM_Tests.MC_FCM_DiffGenClusters_Benchmark();
-        //MC_FCM_Tests.MC_SSMC_FCM_Benchmark();
         //MC_FCM_Tests.FCM_And_MC_FCM_BenchMark();
         //sSMC_FCM_Tests.SSMC_FCM_WithTrial_Benchmark();
         //sSMC_FCM_Tests.SSMC_FCM_Benchmark();
@@ -377,10 +399,17 @@ public class Program
         //CustomBenchmark_sSMC_FCM();
         //CustomBenchmark_sSMC_FCM2();
         //ViewX();
-        //Model_Tests.Test();
+        //Model_Tests.Test_DistanceNearestModel();
         //Model_Tests.Test_sSMC_FCM_CxN_Model();
         //Model_Tests.Test_MC_sSMC_FCM_CxN_Model();
-
+        //Model_Tests.Test_MultiPredict_sSMC_FCM_CxN_Predictable_Model();
+        //Model_Tests.Test_sSMC_FCM_CxN_Predictable_Model();
+        //Model_Tests.Test_MultiPredict_MC_sSMC_FCM_CxN_Predictable_Model();
+        //Model_Tests.Test_ANN_Classifier_Model();
+        //Model_Tests.Test_Decision_Tree_Model();
+        //Model_Tests.Test_KNN_Model();
+        Model_Tests.Test_Kmeans_Model();
+        Model_Tests.Test_Random_Forest_Model();
 
         stopwatch.Stop();
         Console.WriteLine("Elapsed Time: {0} s", stopwatch.ElapsedMilliseconds / 1000.0);

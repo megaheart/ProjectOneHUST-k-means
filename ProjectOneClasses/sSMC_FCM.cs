@@ -13,8 +13,9 @@ namespace ProjectOneClasses
         private int C;
         private IReadOnlyDictionary<int, int> Y;
         private double epsilon;
+        int maxInterator;
         public sSMC_FCM([NotNull] IReadOnlyList<double[]> X, int C, IReadOnlyDictionary<int, int> Y,
-            double M = 2, double alpha = 0.6, double epsilon = 0.0001)
+            double M = 2, double alpha = 0.6, double epsilon = 0.0001, int maxInterator = 200)
         {
             if (C < 1) throw new Exception("C must be more than 0");
             if (C > X.Count) throw new Exception("C cannot be more than number of X");
@@ -25,6 +26,7 @@ namespace ProjectOneClasses
             this.alpha = alpha;
             this.Y = Y.ToImmutableDictionary();
             this.n = X.Count;
+            this.maxInterator = maxInterator;
         }
         
         public sSMC_FCM_Result Result { get; private set; } = null;
@@ -109,7 +111,7 @@ namespace ProjectOneClasses
 
             //Main
             int l = 0;
-            while (true)
+            while (l < maxInterator)
             {
                 l++;
                 //B2: Update U[i][k]

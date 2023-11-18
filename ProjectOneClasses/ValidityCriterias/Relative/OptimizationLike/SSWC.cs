@@ -23,24 +23,13 @@ namespace ProjectOneClasses.ValidityCriterias.Relative.OptimizationLike
             return sum;
 
         }
-        public SSWC(IReadOnlyList<double[]> X, int C/*, IReadOnlyList<int> expect*/, IFCM_Result result)
+        private void CalculateIndex(IReadOnlyList<double[]> X, int C, List<int>[] clusters)
         {
             int dimension = X[0].Length;
-            List<int>[] clusters = new List<int>[C];
-            for (int i = 0; i < C; i++) clusters[i] = new List<int>(X.Count / C + 1);
-            var U = result.U;
-            for (int i = 0; i < X.Count; i++)
-            {
-                int k_max = 0;
-                for (int k = 1; k < C; k++)
-                {
-                    if (U[i][k] > U[i][k_max]) k_max = k;
-                }
-                clusters[k_max].Add(i);
-            }
+
             //Calculate centroids
             double[][] centroids = new double[C][];
-            
+
             for (var i = 0; i < C; i++)
             {
                 double[] c = new double[dimension];
@@ -78,9 +67,10 @@ namespace ProjectOneClasses.ValidityCriterias.Relative.OptimizationLike
                     double bpj = double.MaxValue;
                     for (var q = 0; q < C; q++)
                     {
-                        if(p == q) { continue; }
+                        if (p == q) { continue; }
                         double dqj = Math.Sqrt(GetSquareDistanse(X[j], centroids[q]));
-                        if(dqj < bpj) { 
+                        if (dqj < bpj)
+                        {
                             bpj = dqj;
                         }
                     }
@@ -90,6 +80,41 @@ namespace ProjectOneClasses.ValidityCriterias.Relative.OptimizationLike
             }
 
             Index = sum / X.Count;
+        }
+
+        public SSWC(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> predicts)
+        {
+            var clusters = Utils.PredictionsToClusters(C, predicts);
+
+            // Calculate index
+            CalculateIndex(X, C, clusters);
+        }
+
+        public SSWC(IReadOnlyList<double[]> X, int C, IReadOnlyDictionary<int, int> predicts)
+        {
+            var clusters = Utils.PredictionsToClusters(C, predicts);
+
+            // Calculate index
+            CalculateIndex(X, C, clusters);
+        }
+
+        public SSWC(IReadOnlyList<double[]> X, int C/*, IReadOnlyList<int> expect*/, IFCM_Result result)
+        {
+            List<int>[] clusters = new List<int>[C];
+            for (int i = 0; i < C; i++) clusters[i] = new List<int>(X.Count / C + 1);
+            var U = result.U;
+            for (int i = 0; i < X.Count; i++)
+            {
+                int k_max = 0;
+                for (int k = 1; k < C; k++)
+                {
+                    if (U[i][k] > U[i][k_max]) k_max = k;
+                }
+                clusters[k_max].Add(i);
+            }
+
+            // Calculate index
+            CalculateIndex(X, C, clusters);
         }
     }
 }

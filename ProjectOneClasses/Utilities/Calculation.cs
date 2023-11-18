@@ -50,27 +50,5 @@ namespace ProjectOneClasses.Utilities
             } while (indexes != null);
         }
 
-        public static double Accuracy<T>(IReadOnlyDictionary<int, T> testLabels, IReadOnlyDictionary<int, T> predictions)
-            where T : IEquatable<T>
-        {
-            int N = testLabels.Count;
-            int sameCount = 0;
-            foreach (var testLabel in testLabels)
-            {
-                var prediction = predictions[testLabel.Key];
-                if (prediction == null)
-                {
-                    if (testLabel.Value == null) sameCount++;
-                    continue;
-                }
-
-                if (prediction.Equals(testLabel.Value))
-                {
-                    sameCount++;
-                }
-            }
-
-            return sameCount * 1.0 / N;
-        }
     }
 }

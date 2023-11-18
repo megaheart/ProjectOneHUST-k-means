@@ -35,10 +35,26 @@ namespace ProjectOneClasses.ResultTypes
             Accuracy = new Accuracy(X, C, expect, result).Index;
             Rand = new Rand(X, C, expect, result).Index;
             Jaccard = new Jaccard(X, C, expect, result).Index;
+        }
 
-            //if(precision.HasValue) {
-                
-            //}
+        public Evaluation_Result(IReadOnlyList<double[]> X, int C, IReadOnlyList<int> expect, IReadOnlyList<int> predicts/*, int? precision = 6*/)
+        {
+            SSWC = new SSWC(X, C, predicts).Index;
+            DB = new DB(X, C, predicts).Index;
+            PBM = new PBM(X, C, predicts).Index;
+            Accuracy = new Accuracy(X, C, expect, predicts).Index;
+            Rand = new Rand(X, C, expect, predicts).Index;
+            Jaccard = new Jaccard(X, C, expect, predicts).Index;
+        }
+
+        public Evaluation_Result(IReadOnlyList<double[]> X, int C, IReadOnlyDictionary<int, int> expect, IReadOnlyDictionary<int, int> predicts/*, int? precision = 6*/)
+        {
+            SSWC = new SSWC(X, C, predicts).Index;
+            DB = new DB(X, C, predicts).Index;
+            PBM = new PBM(X, C, predicts).Index;
+            Accuracy = new Accuracy(X, C, expect, predicts).Index;
+            Rand = new Rand(X, C, expect, predicts).Index;
+            Jaccard = new Jaccard(X, C, expect, predicts).Index;
         }
 
         public Evaluation_Result Round(int precision)
@@ -51,6 +67,16 @@ namespace ProjectOneClasses.ResultTypes
             double jaccard = Math.Round(Jaccard, precision);
 
             return new Evaluation_Result(sSWC, dB, pBM, accuracy, rand, jaccard);
+        }
+
+        public static Evaluation_Result operator +(Evaluation_Result a, Evaluation_Result b)
+        {
+            return new Evaluation_Result(a.SSWC + b.SSWC, a.DB + b.DB, a.PBM + b.PBM, a.Accuracy + b.Accuracy, a.Rand + b.Rand, a.Jaccard + b.Jaccard);
+        }
+
+        public static Evaluation_Result operator /(Evaluation_Result a, int b)
+        {
+            return new Evaluation_Result(a.SSWC / b, a.DB / b, a.PBM / b, a.Accuracy / b, a.Rand / b, a.Jaccard / b);
         }
     }
 }

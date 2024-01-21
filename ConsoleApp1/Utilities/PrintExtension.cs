@@ -12,9 +12,19 @@ namespace ConsoleApp1.Utilities
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("[");
-            foreach (T item in values)
+            if (typeof(T) == typeof(double) || typeof(T) == typeof(float))
             {
-                sb.Append($"{item:F6}, ");
+                foreach (T item in values)
+                {
+                    sb.Append($"{item:F6}, ");
+                }
+            }
+            else
+            {
+                foreach (T item in values)
+                {
+                    sb.Append($"{item}, ");
+                }
             }
             if(sb.Length > 1)
             {

@@ -387,5 +387,25 @@ namespace ConsoleApp1.Tests
 
             TestModel(train, predict);
         }
+
+        public static void Test_SVC_Model()
+        {
+            TrainFunction<SVC> train = (trainData, C, trainLabels) =>
+            {
+                var model = new SVC();
+                model.Train(trainData, C, trainLabels).Wait();
+                return model;
+            };
+
+            PredictFunction<SVC> predict = (model, testData) =>
+            {
+                var predictions = model.Predict(testData).Result;
+                return predictions;
+            };
+
+            Console.WriteLine("Support Vector Classification Model Benchmark\n");
+
+            TestModel(train, predict);
+        }
     }
 }

@@ -14,7 +14,7 @@ scaler = StandardScaler()
 X = scaler.fit_transform(train_data)
 
 # # Define neural network model
-model = KMeans(n_clusters=3)
+model = KMeans(n_clusters=C)
 
 # Train model
 model.fit(X, train_labels)

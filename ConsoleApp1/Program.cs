@@ -14,6 +14,9 @@ using ConsoleApp1.Tests;
 using System.Diagnostics;
 using ProjectOneClasses.Trials;
 using PythonInteractive.Utils;
+using ProjectOneClasses.Models;
+using System.Collections.Immutable;
+using PythonInteractive;
 
 public class Program
 {
@@ -345,6 +348,149 @@ public class Program
         Console.WriteLine();
     }
 
+    public static void Test_PredictUntrainedClass()
+    {
+        Data.LoadAllExampleData();
+        var dataInfo = Data.datas.FirstOrDefault(t => t.Name == "Iris");
+        var data = dataInfo.aCIDb;
+        var X = data.X;
+        var expect = data.expect;
+        var label1List = data.X.Where((x, i) => expect[i] == 0).ToList();
+        var label2List = data.X.Where((x, i) => expect[i] == 1).ToList();
+        var label3List = data.X.Where((x, i) => expect[i] == 2).ToList();
+
+        var label1Indexes = Enumerable.Range(0, label1List.Count).ToList();
+        var label2Indexes = Enumerable.Range(0, label2List.Count).ToList();
+        var label3Indexes = Enumerable.Range(0, label3List.Count).ToList();
+
+        label1Indexes.Shuffle();
+        label2Indexes.Shuffle();
+        label3Indexes.Shuffle();
+
+        var trainData = new List<double[]>();
+        var trainLabels = new List<int>();
+
+        var testData = new List<double[]>();
+        var testLabels = new List<int>();
+
+        var label1TrainDataCount = (int)(label1Indexes.Count * 0.8);
+        var label2TrainDataCount = (int)(label2Indexes.Count * 0.8);
+        var label3TrainDataCount = (int)(label3Indexes.Count * 0.8);
+        
+        for(int i = 0; i < label1TrainDataCount; i++)
+        {
+            trainData.Add(label1List[label1Indexes[i]]);
+            trainLabels.Add(0);
+        }
+        for (int i = 0; i < label2TrainDataCount; i++)
+        {
+            trainData.Add(label2List[label2Indexes[i]]);
+            trainLabels.Add(1);
+        }
+        //for (int i = 0; i < label3TrainDataCount; i++)
+        //{
+        //    trainData.Add(label3List[label3Indexes[i]]);
+        //    trainLabel.Add(2);
+        //}
+
+        for (int i = label1TrainDataCount; i < label1Indexes.Count; i++)
+        {
+            testData.Add(label1List[label1Indexes[i]]);
+            testLabels.Add(0);
+        }
+        for (int i = label2TrainDataCount; i < label2Indexes.Count; i++)
+        {
+            testData.Add(label2List[label2Indexes[i]]);
+            testLabels.Add(1);
+        }
+        for (int i = label3TrainDataCount; i < label3Indexes.Count; i++)
+        {
+            testData.Add(label3List[label3Indexes[i]]);
+            testLabels.Add(2);
+        }
+
+        var trainLabelsMap = trainLabels.Select((x, i) => new Tuple<int, int>(i, x))
+            .ToImmutableDictionary(x => x.Item1, x => x.Item2);
+
+        Console.WriteLine($"Train Data Count: {trainData.Count}, includes of only label 0 and 1.");
+        Console.WriteLine($"Test Data Count: {testData.Count}, includes of all labels.");
+        Console.WriteLine($"Test Data Labels: ${testLabels.Print()}");
+        Console.WriteLine("----------------------------------------------");
+        // sSMC-FCM Model
+        var ssmc_fcm = new sSMC_FCM_CxN_Predictable_Model();
+        ssmc_fcm.LearnFuzzificationCoefficientsMatrix(trainData, data.C, trainLabelsMap);
+        var ssmc_fcm_predict = ssmc_fcm.Predict(testData);
+        var ssmc_fcm_accuracy = new Accuracy(testData, data.C, testLabels, ssmc_fcm_predict).Index;
+
+        Console.WriteLine($"sSMC-FCM Accuracy: {ssmc_fcm_accuracy}");
+        Console.WriteLine($"sSMC-FCM Predictions: {ssmc_fcm_predict.Print()}");
+        Console.WriteLine("----------------------------------------------");
+        // MC_sSMC-FCM Model
+        //var mc_ssmc_fcm = new MC_sSMC_FCM_CxN_Predictable_Model();
+        //mc_ssmc_fcm.LearnFuzzificationCoefficientsMatrix(trainData, data.C, trainLabelsMap);
+        //var mc_ssmc_fcm_predict = mc_ssmc_fcm.Predict(testData);
+        //var mc_ssmc_fcm_accuracy = new Accuracy(testData, data.C, testLabels, mc_ssmc_fcm_predict).Index;
+
+        //Console.WriteLine($"MC_sSMC-FCM Accuracy: {mc_ssmc_fcm_accuracy}");
+        //Console.WriteLine($"MC_sSMC-FCM Predictions: {mc_ssmc_fcm_predict.Print()}");
+        //Console.WriteLine("----------------------------------------------");
+
+        // ANN Classifier Model
+        var ann_classifier = new ANNClassifier();
+        ann_classifier.Train(trainData, data.C, trainLabelsMap).Wait();
+        var ann_classifier_predict = ann_classifier.Predict(testData).Result;
+        var ann_classifier_accuracy = new Accuracy(testData, data.C, testLabels, ann_classifier_predict).Index;
+        
+        Console.WriteLine($"ANN Classifier Accuracy: {ann_classifier_accuracy}");
+        Console.WriteLine($"ANN Classifier Predictions: {ann_classifier_predict.Print()}");
+        Console.WriteLine("----------------------------------------------");
+        // Decision Tree Model
+        var decision_tree = new DecisionTreeModel();
+        decision_tree.Train(trainData, data.C, trainLabelsMap).Wait();
+        var decision_tree_predict = decision_tree.Predict(testData).Result;
+        var decision_tree_accuracy = new Accuracy(testData, data.C, testLabels, decision_tree_predict).Index;
+
+        Console.WriteLine($"Decision Tree Accuracy: {decision_tree_accuracy}");
+        Console.WriteLine($"Decision Tree Predictions: {decision_tree_predict.Print()}");
+        Console.WriteLine("----------------------------------------------");
+        // KNN Model
+        var knn = new KNNModel();
+        knn.Train(trainData, data.C, trainLabelsMap).Wait();
+        var knn_predict = knn.Predict(testData).Result;
+        var knn_accuracy = new Accuracy(testData, data.C, testLabels, knn_predict).Index;
+        
+        Console.WriteLine($"KNN Accuracy: {knn_accuracy}");
+        Console.WriteLine($"KNN Predictions: {knn_predict.Print()}");
+        Console.WriteLine("----------------------------------------------");
+        // Kmeans Model
+        var kmeans = new KmeansModel();
+        kmeans.Train(trainData, data.C, trainLabelsMap).Wait();
+        var kmeans_predict = kmeans.Predict(testData).Result;
+        var kmeans_accuracy = new Accuracy(testData, data.C, testLabels, kmeans_predict).Index;
+        
+        Console.WriteLine("Kmeans Accuracy: {0}", kmeans_accuracy);
+        Console.WriteLine($"Kmeans Predictions: {kmeans_predict.Print()}");
+        Console.WriteLine("----------------------------------------------");
+        // Random Forest Model
+        var random_forest = new RandomForestModel();
+        random_forest.Train(trainData, data.C, trainLabelsMap).Wait();
+        var random_forest_predict = random_forest.Predict(testData).Result;
+        var random_forest_accuracy = new Accuracy(testData, data.C, testLabels, random_forest_predict).Index;
+        Console.WriteLine($"Random Forest Accuracy: {random_forest_accuracy}");
+        Console.WriteLine($"Random Forest Predictions: {random_forest_predict.Print()}");
+        Console.WriteLine("----------------------------------------------");
+        // SVC Model
+        var svc = new SVC();
+        svc.Train(trainData, data.C, trainLabelsMap).Wait();
+        var svc_predict = svc.Predict(testData).Result;
+        var svc_accuracy = new Accuracy(testData, data.C, testLabels, svc_predict).Index;
+
+        Console.WriteLine($"SVC Accuracy: {svc_accuracy}");
+        Console.WriteLine($"SVC Predictions: {svc_predict.Print()}");
+        Console.WriteLine("----------------------------------------------");
+
+    }
+
     [DllImport("kernel32.dll", ExactSpelling = true)]
     private static extern IntPtr GetConsoleWindow();
     private static IntPtr ThisConsole = GetConsoleWindow();
@@ -381,8 +527,8 @@ public class Program
         //    s = Console.ReadLine();
         //}
 
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
+        //Stopwatch stopwatch = new Stopwatch();
+        //stopwatch.Start();
 
         //Data.CreateSemiSupervisonOfAllData();
         //Data.Create_BestMCFCM_SemiSupervisonOfAllData();
@@ -399,6 +545,7 @@ public class Program
         //CustomBenchmark_sSMC_FCM();
         //CustomBenchmark_sSMC_FCM2();
         //ViewX();
+        Test_PredictUntrainedClass();
         //Model_Tests.Test_DistanceNearestModel();
         //Model_Tests.Test_sSMC_FCM_CxN_Model();
         //Model_Tests.Test_MC_sSMC_FCM_CxN_Model();
@@ -408,11 +555,22 @@ public class Program
         //Model_Tests.Test_ANN_Classifier_Model();
         //Model_Tests.Test_Decision_Tree_Model();
         //Model_Tests.Test_KNN_Model();
-        Model_Tests.Test_Kmeans_Model();
-        Model_Tests.Test_Random_Forest_Model();
+        //Model_Tests.Test_Kmeans_Model();
+        //Model_Tests.Test_Random_Forest_Model();
+        //Model_Tests.Test_SVC_Model();
 
-        stopwatch.Stop();
-        Console.WriteLine("Elapsed Time: {0} s", stopwatch.ElapsedMilliseconds / 1000.0);
+        //Model_PredictUntrainedClass_Tests.Test_DistanceNearestModel();
+        //Model_PredictUntrainedClass_Tests.Test_MultiPredict_sSMC_FCM_CxN_Predictable_Model();
+        //Model_PredictUntrainedClass_Tests.Test_MultiPredict_MC_sSMC_FCM_CxN_Predictable_Model();
+        //Model_PredictUntrainedClass_Tests.Test_ANN_Classifier_Model();
+        //Model_PredictUntrainedClass_Tests.Test_Decision_Tree_Model();
+        //Model_PredictUntrainedClass_Tests.Test_KNN_Model();
+        //Model_PredictUntrainedClass_Tests.Test_Kmeans_Model();
+        //Model_PredictUntrainedClass_Tests.Test_Random_Forest_Model();
+        //Model_PredictUntrainedClass_Tests.Test_SVC_Model();
+
+        //stopwatch.Stop();
+        //Console.WriteLine("Elapsed Time: {0} s", stopwatch.ElapsedMilliseconds / 1000.0);
 
         //Console.ReadLine();
 

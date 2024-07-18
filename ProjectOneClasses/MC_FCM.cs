@@ -341,6 +341,8 @@ namespace ProjectOneClasses
                 maxGroupsV[xi] = new double[dimension];
                 Array.Copy(X[xi], maxGroupsV[xi], dimension);
                 XPoint p;
+                // TODO: Check the correctness of this code
+                priorityQueues[xi].TryDequeue(out _, out _);
                 while (priorityQueues[xi].TryDequeue(out p, out _))
                 {
                     if (zIndexs[p.i] != n) continue;
